@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="vi"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FPL Coach Platform v2 🐝</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#C8A94A;--dark:#060B12;--mid:#0A1520;--card:#0E1C30;
+  --bdr:#1A2E48;--txt:#D4E0EE;--muted:#3D5470;
+  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;
+  --purple:#a855f7;--orange:#f97316;--cyan:#06b6d4;
+}
+body{background:var(--dark);color:var(--txt);font-family:'Segoe UI',sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--mid)}
+::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+#loading{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:16px}
+.spinner{width:44px;height:44px;border:3px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#login-page{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:radial-gradient(ellipse at 50% 0%,#1a2d4a22 0%,transparent 70%)}
+.header{background:linear-gradient(135deg,var(--mid),var(--card));border-bottom:2px solid var(--gold);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:50}
+.tabs{display:flex;background:var(--mid);border-bottom:1px solid var(--bdr);overflow-x:auto;position:sticky;top:62px;z-index:40}
+.tab-btn{padding:11px 13px;border:none;cursor:pointer;font-size:11px;font-weight:700;white-space:nowrap;font-family:inherit;background:transparent;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.3px}
+.tab-btn.active{background:var(--card);color:var(--gold);border-bottom:2px solid var(--gold)}
+.page{padding:18px 16px;max-width:980px;margin:0 auto;display:none}
+.page.active{display:block}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:18px;margin-bottom:14px}
+.ct{font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--gold);margin-bottom:14px;text-transform:uppercase}
+input,select,textarea{background:#030709;border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:8px 12px;font-size:13px;width:100%;font-family:inherit;outline:none;box-sizing:border-box}
+input:focus,select:focus,textarea:focus{border-color:#C8A94A55}
+select option{background:var(--card)}
+.lbl{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1.5px;display:block;margin-bottom:4px}
+textarea{resize:vertical}
+.btn{border-radius:7px;cursor:pointer;font-family:inherit;font-weight:800;border:1px solid;white-space:nowrap;transition:all .15s}
+.btn-gf{background:linear-gradient(135deg,#C8A94A,#dbb84a);border-color:var(--gold);color:#030709;padding:10px;font-size:13px;width:100%}
+.btn-gold{background:#C8A94A22;border-color:var(--gold);color:var(--gold);padding:9px 16px;font-size:13px}
+.btn-green{background:#22c55e22;border-color:var(--green);color:var(--green);padding:9px 16px;font-size:13px}
+.btn-red{background:#ef444422;border-color:var(--red);color:var(--red);padding:9px 16px;font-size:13px}
+.btn-gray{background:#3D547022;border-color:var(--muted);color:var(--muted);padding:9px 16px;font-size:13px}
+.btn-blue{background:#3b82f622;border-color:var(--blue);color:var(--blue);padding:9px 16px;font-size:13px}
+.btn-purple{background:#a855f722;border-color:var(--purple);color:var(--purple);padding:9px 16px;font-size:13px}
+.btn-orange{background:#f9731622;border-color:var(--orange);color:var(--orange);padding:9px 16px;font-size:13px}
+.btn-sm{padding:5px 11px!important;font-size:11px!important}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:580px){.g2,.g3,.g4{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:7px 5px;text-align:center}
+td:first-child{text-align:left;padding:7px 12px}
+tr{border-top:1px solid var(--bdr)}
+th{color:var(--muted);font-size:10px;font-weight:700}
+.tag{display:inline-block;font-size:10px;font-weight:900;padding:2px 8px;border-radius:4px;letter-spacing:.8px}
+.hs-wrap{position:relative}
+.hs-dd{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--gold);border-radius:8px;z-index:999;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.8);display:none}
+.hs-dd.open{display:block}
+.hs-opt{padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr)}
+.hs-opt:hover{background:#C8A94A22}
+.flex{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stat-mini{background:#060B12;border-radius:8px;padding:5px 10px;text-align:center;min-width:46px}
+.progress-track{height:5px;background:var(--bdr);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s}
+.player-chip{flex:1;min-width:108px;background:var(--mid);border-radius:11px;padding:12px 14px;text-align:center;border:2px solid var(--bdr)}
+.week-hdr{display:flex;align-items:center;gap:10px;padding:8px 0;margin-bottom:10px}
+.week-line{height:1px;flex:1;background:var(--bdr)}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.ann-item{display:flex;gap:10px;margin-bottom:10px;background:var(--mid);border-radius:8px;padding:10px 12px;border-left:3px solid var(--gold)}
+.scrim-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:0;margin-bottom:12px;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.scrim-card:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.scrim-card-top{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.scrim-card-body{padding:0 16px 14px;border-top:1px solid var(--bdr);margin-top:0}
+.scrim-score{font-size:32px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-match{animation:matchPulse 1.5s ease-in-out infinite;border-color:#22c55e!important;background:#22c55e18!important;}
+@keyframes matchPulse{0%,100%{box-shadow:0 0 8px #22c55e44}50%{box-shadow:0 0 20px #22c55e88}}
+.cal-day{min-height:54px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;cursor:pointer;border:1px solid transparent;transition:all .15s;padding:2px}
+.cal-day:hover{border-color:var(--gold)}
+.cal-day.has-event{background:#C8A94A18;border-color:#C8A94A44}
+.cal-day.today{background:#C8A94A33;border-color:var(--gold);font-weight:800}
+.cal-day.other-month{opacity:.3}
+.cal-dot{width:5px;height:5px;border-radius:50%;margin-top:2px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modal-box{background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-weight:700;font-size:13px;z-index:500;display:none;white-space:nowrap}
+.bee{display:inline-block;animation:beebob .8s ease-in-out infinite alternate}
+@keyframes beebob{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+.absence-badge{background:#ef444422;border:1px solid #ef4444;border-radius:6px;padding:3px 8px;font-size:10px;color:#ef4444;font-weight:700}
+.hero-stat-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.hero-stat-bar{flex:1;height:8px;background:var(--bdr);border-radius:4px;overflow:hidden}
+.hero-stat-fill{height:100%;border-radius:4px;transition:width .4s}
+@media print{.header,.tabs,.btn,.modal,#loading,.toast{display:none!important}.page{display:block!important;padding:0}body{background:white;color:black}.card{border:1px solid #ccc;break-inside:avoid}}
+.sched-row{display:flex;align-items:center;gap:10px;background:var(--mid);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;margin-bottom:8px;flex-wrap:wrap}
+.sched-time{font-size:20px;font-weight:900;color:var(--gold);min-width:50px}
+.event-type-scrim{border-left:4px solid var(--blue)}
+.event-type-match{border-left:4px solid var(--green)}
+.event-type-rest{border-left:4px solid var(--muted)}
+.event-type-meeting{border-left:4px solid var(--purple)}
+.event-type-training{border-left:4px solid var(--orange)}
+</style>
+</head>
+<body>
+
+<div id="loading" style="display:none">
+  <div style="font-size:56px">🐝</div>
+  <div class="spinner"></div>
+  <div style="color:var(--gold);font-size:13px;font-weight:700;letter-spacing:2px">Đang kết nối...</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="login-page" style="display:none">
+  <div style="background:var(--card);border:2px solid #C8A94A44;border-radius:16px;padding:36px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:56px;margin-bottom:8px"><span class="bee">🐝</span></div>
+      <div style="font-size:22px;font-weight:900;color:var(--gold);letter-spacing:2px">FPL COACH PLATFORM</div>
+      <div style="font-size:10px;color:var(--muted);letter-spacing:3px;margin-top:4px">LIÊN QUÂN MOBILE · v2.0</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="lbl">CHỌN TÀI KHOẢN</label>
+      <select id="ls"><option value="">— Chọn vai trò —</option></select>
+    </div>
+    <div style="margin-bottom:8px">
+      <label class="lbl">MẬT KHẨU</label>
+      <div style="position:relative">
+        <input type="password" id="lp" placeholder="••••••••" style="padding-right:40px" onkeydown="if(event.key==='Enter')doLogin()">
+        <button onclick="togglePwd()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px" id="pwd-eye">👁️</button>
+      </div>
+    </div>
+    <div id="login-err" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none;text-align:center;background:#ef444411;padding:8px;border-radius:6px"></div>
+    <button class="btn btn-gf" onclick="doLogin()">🔐 ĐĂNG NHẬP</button>
+    <div style="margin-top:14px;font-size:11px;color:var(--muted);text-align:center;padding:10px;background:var(--mid);border-radius:8px">🔒 Liên hệ Coach để nhận mật khẩu</div>
+  </div>
+</div>
+
+<div id="app" style="display:block">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="bee" style="font-size:24px">🐝</span>
+      <div>
+        <div style="font-size:17px;font-weight:900;color:var(--gold);letter-spacing:1.5px">FPL COACH PLATFORM</div>
+        <div style="font-size:9px;color:var(--muted);letter-spacing:3px">LIÊN QUÂN · <span id="hdr-event">APL 2026</span></div>
+      </div>
+    </div>
+    <div class="flex">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--dark);border:1px solid var(--bdr);border-radius:8px;padding:6px 12px">
+        <span id="hdr-av" style="font-size:18px"></span>
+        <div><div id="hdr-name" style="font-size:13px;font-weight:800"></div><div id="hdr-pos" style="font-size:9px;color:var(--muted)"></div></div>
+      </div>
+      <div class="stat-mini" style="border:1px solid #3D547033"><div id="hdr-sc" style="font-size:13px;font-weight:900;color:var(--muted)">0</div><div style="font-size:8px;color:var(--muted)">SCRIM</div></div>
+      <div class="stat-mini" style="border:1px solid #22c55e33"><div id="hdr-w" style="font-size:13px;font-weight:900;color:var(--green)">0</div><div style="font-size:8px;color:var(--muted)">THẮNG</div></div>
+      <div class="stat-mini" style="border:1px solid #C8A94A33"><div id="hdr-wr" style="font-size:13px;font-weight:900;color:var(--gold)">—</div><div style="font-size:8px;color:var(--muted)">WR</div></div>
+      <button class="btn btn-gray btn-sm" onclick="logout()">🚪</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="gotoTab('dashboard',this)">🏠 Tổng Quan</button>
+    <button class="tab-btn" onclick="gotoTab('attendance',this)">📋 Điểm Danh</button>
+    <button class="tab-btn" onclick="gotoTab('training',this)">🗡️ Luyện Tướng</button>
+    <button class="tab-btn" onclick="gotoTab('schedule',this)">📅 Lịch Đội</button>
+    <button class="tab-btn" onclick="gotoTab('scrim',this)">⚔️ Scrim</button>
+    <button class="tab-btn" onclick="gotoTab('performance',this)">⭐ Đánh Giá</button>
+    <button class="tab-btn" onclick="gotoTab('herostats',this)">📊 Thống Kê Tướng</button>
+    <button class="tab-btn" onclick="gotoTab('opponents',this)">🎯 Đối Thủ</button>
+    <button class="tab-btn" onclick="gotoTab('ranking',this)">🏆 Bảng XH</button>
+    <button class="tab-btn" onclick="gotoTab('account',this)">👤 Tài Khoản</button>
+    <button class="tab-btn" id="settings-tab" onclick="gotoTab('settings',this)" style="display:none">⚙️ Cài Đặt</button>
+  </div>
+
+  <div id="page-dashboard" class="page active">
+    <div class="card" style="background:linear-gradient(135deg,#0d1f0d,#0e1c30);border-color:#C8A94A55">
+      <div class="flex">
+        <div style="flex:1">
+          <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:4px" id="cd-label">APL 2026 · ĐẾM NGƯỢC</div>
+          <div id="cd-val" style="font-size:36px;font-weight:900;color:var(--green)">—</div>
+        </div>
+        <div class="flex" id="dash-stats"></div>
+      </div>
+    </div>
+    <div id="absence-alerts"></div>
+    <div id="ann-box"></div>
+    <div id="ann-input" class="flex" style="margin-bottom:14px;display:flex">
+      <input id="ann-inp" placeholder="📢 Thêm thông báo..." style="flex:1" onkeydown="if(event.key==='Enter')addAnn()">
+      <button class="btn btn-gold" onclick="addAnn()">Đăng</button>
+    </div>
+    <div id="coach-note-box" class="card" style="display:none">
+      <div class="ct" style="color:var(--blue)">📝 GHI CHÚ NGÀY</div>
+      <div class="flex"><input id="note-inp" placeholder="Nhận xét buổi tập hôm nay..." style="flex:1" onkeydown="if(event.key==='Enter')addNote()"><button class="btn btn-blue" onclick="addNote()">Lưu</button></div>
+    </div>
+    <div id="player-note-box"></div>
+    <div id="my-stats-box"></div>
+    <div class="card"><div class="ct">🏅 BẢNG CHUYÊN CẦN</div><div id="streak-board" class="flex"></div></div>
+    <div id="coach-private-box"></div>
+  </div>
+
+  <div id="page-attendance" class="page">
+    <div id="my-checkin" class="card" style="display:none;margin-bottom:16px"></div>
+    <div id="absence-form-box" class="card" style="border-color:#f9731644;display:none">
+      <div class="ct" style="color:var(--orange)">📩 BÁO VẮNG MẶT TRƯỚC</div>
+      <div class="g2" style="margin-bottom:12px">
+        <div><label class="lbl">NGÀY VẮNG</label><input type="date" id="abs-date"></div>
+        <div><label class="lbl">LÝ DO</label>
+          <select id="abs-reason">
+            <option value="">— Chọn lý do —</option>
+            <option>Bệnh / Sức khỏe</option>
+            <option>Việc gia đình</option>
+            <option>Học tập / Thi cử</option>
+            <option>Công việc</option>
+            <option>Lý do khác</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:12px"><label class="lbl">GHI CHÚ THÊM</label><textarea id="abs-note" placeholder="Chi tiết lý do vắng..." style="min-height:60px"></textarea></div>
+      <button class="btn btn-orange" style="width:100%" onclick="submitAbsence()">📩 GỬI BÁO VẮNG</button>
+    </div>
+    <div class="card">
+      <div class="ct" id="att-today-title">📋 HÔM NAY</div>
+      <div id="att-grid" class="flex" style="margin-bottom:12px"></div>
+      <div id="att-sum" style="font-size:12px;color:var(--muted)"></div>
+    </div>
+    <div id="pending-absences"></div>
+    <div class="card">
+      <div class="flex" style="justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div class="ct" style="margin:0">📅 ĐIỂM DANH TUẦN</div>
+        <div class="flex">
+          <button class="btn btn-gray btn-sm" onclick="attNav(-1)">◀</button>
+          <span id="att-wk" style="font-size:12px;color:var(--gold);font-weight:700;min-width:155px;text-align:center"></span>
+          <button class="btn btn-gray btn-sm" onclick="attNav(1)">▶</button>
+          <button class="btn btn-gold btn-sm" onclick="attOff=0;renderAtt()">Hôm nay</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto"><table><thead><tr id="att-th"></tr></thead><tbody id="att-tb"></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="page-training" class="page">
+    <div class="flex" style="justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:13px;color:var(--gold);font-weight:700" id="train-wk"></div>
+      <div class="flex">
+        <button class="btn btn-gray btn-sm" onclick="trainNav(-1)">◀</button>
+        <button class="btn btn-gold btn-sm" onclick="trainOff=0;renderTraining()">Tuần này</button>
+        <button class="btn btn-gray btn-sm" onclick="trainNav(1)">▶</button>
+      </div>
+    </div>
+    <div id="training-list"></div>
+  </div>
+
+  <div id="page-schedule" class="page">
+    <div style="margin-bottom:16px">
+      <div class="card">
+        <div class="flex" style="justify-content:space-between;margin-bottom:14px">
+          <div class="ct" style="margin:0" id="cal-title">THÁNG</div>
+          <div class="flex">
+            <button class="btn btn-gray btn-sm" onclick="calNav(-1)">◀</button>
+            <button class="btn btn-gold btn-sm" onclick="calToday()">Hôm nay</button>
+            <button class="btn btn-gray btn-sm" onclick="calNav(1)">▶</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
+          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T2</div>
+          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T3</div>
+          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T4</div>
+          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T5</div>
+          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T6</div>
+          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T7</div>
+          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">CN</div>
+        </div>
+        <div id="cal-grid" class="cal-grid"></div>
+        <div class="flex" style="margin-top:12px;flex-wrap:wrap;gap:8px">
+          <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div><span style="font-size:10px;color:var(--muted)">Scrim</span></div>
+          <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div><span style="font-size:10px;color:var(--muted)">Thi đấu</span></div>
+          <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--orange)"></div><span style="font-size:10px;color:var(--muted)">Tập luyện</span></div>
+          <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple)"></div><span style="font-size:10px;color:var(--muted)">Họp</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="card" id="selected-day-card">
+          <div class="ct" id="selected-day-title">CHỌN NGÀY ĐỂ XEM</div>
+          <div id="selected-day-events"><div class="empty" style="padding:20px 0;font-size:12px">Nhấn vào ngày trên lịch để xem sự kiện</div></div>
+          <div id="add-event-btn-box" style="margin-top:12px;display:none">
+            <button class="btn btn-gold" style="width:100%" onclick="openAddEvent()">+ Thêm sự kiện</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">📋 SỰ KIỆN SẮP TỚI</div>
+      <div id="upcoming-events"></div>
+    </div>
+  </div>
+
+  <div id="page-scrim" class="page">
+    <div id="scrim-stats-bar" class="g4" style="margin-bottom:16px"></div>
+    <button id="scrim-add-btn" class="btn btn-gf" onclick="showScrimForm()" style="margin-bottom:16px;display:none">⚔️ THÊM SCRIM MỚI</button>
+    <div id="scrim-form" class="card" style="display:none;border-color:#C8A94A55;margin-bottom:16px">
+      <div class="ct" id="sf-title">⚔️ THÊM SCRIM</div>
+      <input type="hidden" id="sf-eid">
+      <div class="g2" style="margin-bottom:12px">
+        <div><label class="lbl">NGÀY</label><input type="date" id="sf-date"></div>
+        <div><label class="lbl">ĐỐI THỦ</label><select id="sf-opp"><option value="">— Chọn —</option></select></div>
+        <div><label class="lbl">FORMAT</label><select id="sf-fmt"><option>BO1</option><option selected>BO3</option><option>BO5</option></select></div>
+        <div><label class="lbl">TUẦN</label><select id="sf-wk"></select></div>
+      </div>
+      <label class="lbl">KẾT QUẢ</label>
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px">
+        <div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:6px">FPL THẮNG</div><input type="number" id="sf-w" min="0" max="5" placeholder="0" style="text-align:center;font-size:28px;font-weight:900;color:var(--green);padding:14px"></div>
+        <div style="font-size:36px;color:var(--bdr);font-weight:900">–</div>
+        <div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:6px">ĐỐI THỦ</div><input type="number" id="sf-l" min="0" max="5" placeholder="0" style="text-align:center;font-size:28px;font-weight:900;color:var(--red);padding:14px"></div>
+      </div>
+      <div style="margin-bottom:12px"><label class="lbl">GHI CHÚ CHIẾN THUẬT</label><textarea id="sf-notes" placeholder="Điểm mạnh/yếu, chiến thuật cần cải thiện..." style="min-height:70px"></textarea></div>
+      <div class="flex"><button class="btn btn-gf" style="flex:1" onclick="saveScrim()">💾 LƯU</button><button class="btn btn-gray" onclick="cancelScrim()">Hủy</button></div>
+    </div>
+    <div id="scrim-list"></div>
+    <div id="pdf-btn-box" style="display:none;margin-top:8px">
+      <button class="btn btn-purple" style="width:100%" onclick="exportPDF()">📄 XUẤT BÁO CÁO PDF TUẦN NÀY</button>
+    </div>
+  </div>
+
+  <div id="page-performance" class="page">
+    <div class="flex" style="justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:13px;color:var(--gold);font-weight:700" id="perf-wk"></div>
+      <div class="flex">
+        <button class="btn btn-gray btn-sm" onclick="perfNav(-1)">◀</button>
+        <button class="btn btn-gold btn-sm" onclick="perfOff=0;renderPerf()">Tuần này</button>
+        <button class="btn btn-gray btn-sm" onclick="perfNav(1)">▶</button>
+        <button class="btn btn-purple btn-sm" onclick="exportPDF()">📄 PDF</button>
+      </div>
+    </div>
+    <div id="perf-list"></div>
+  </div>
+
+  <div id="page-herostats" class="page">
+    <div class="card">
+      <div class="ct">📊 THỐNG KÊ TƯỚNG — DỰA TRÊN LỊCH TẬP</div>
+      <div class="g2" style="margin-bottom:14px">
+        <div><label class="lbl">LỌC THEO TUYỂN THỦ</label><select id="hero-filter-player" onchange="renderHeroStats()"><option value="all">Tất cả</option></select></div>
+        <div><label class="lbl">SẮP XẾP THEO</label><select id="hero-sort" onchange="renderHeroStats()"><option value="games">Số game nhiều nhất</option><option value="hero">Tên tướng (A-Z)</option><option value="complete">Hoàn thành nhiều nhất</option></select></div>
+      </div>
+      <div id="hero-stats-list"></div>
+    </div>
+    <div class="card"><div class="ct">🎯 HERO POOL TỪNG TUYỂN THỦ</div><div id="player-hero-pools"></div></div>
+  </div>
+
+  <div id="page-opponents" class="page">
+    <div class="card"><div class="ct">🎯 PHÂN TÍCH ĐỐI THỦ</div><div id="opp-list"></div></div>
+    <div class="card"><div class="ct" style="color:var(--blue)">📊 WIN RATE</div><div id="opp-chart"></div></div>
+  </div>
+
+  <div id="page-ranking" class="page">
+    <div class="card"><div class="ct">🏆 BẢNG XẾP HẠNG</div>
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-gold btn-sm" onclick="setRankTab('attendance',this)" id="rt-att">📋 Chuyên cần</button>
+        <button class="btn btn-gray btn-sm" onclick="setRankTab('training',this)" id="rt-train">🗡️ Tập luyện</button>
+        <button class="btn btn-gray btn-sm" onclick="setRankTab('performance',this)" id="rt-perf">⭐ Điểm TB</button>
+      </div>
+      <div id="ranking-list"></div>
+    </div>
+  </div>
+
+  <div id="page-account" class="page">
+    <div class="card" style="border-color:#a855f744">
+      <div class="ct" style="color:var(--purple)">👤 TÀI KHOẢN CỦA BẠN</div>
+      <div id="acc-info" style="margin-bottom:20px"></div>
+      <div style="border-top:1px solid var(--bdr);padding-top:18px">
+        <div class="ct" style="color:var(--blue)">🔐 ĐỔI MẬT KHẨU</div>
+        <div style="margin-bottom:10px"><label class="lbl">MẬT KHẨU HIỆN TẠI</label><input type="password" id="pw-old" placeholder="••••••••"></div>
+        <div style="margin-bottom:10px"><label class="lbl">MẬT KHẨU MỚI</label><input type="password" id="pw-new" placeholder="••••••••"></div>
+        <div style="margin-bottom:14px"><label class="lbl">XÁC NHẬN MẬT KHẨU MỚI</label><input type="password" id="pw-conf" placeholder="••••••••"></div>
+        <div id="pw-err" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none"></div>
+        <button class="btn btn-gf" onclick="changePassword()">🔐 ĐỔI MẬT KHẨU</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-settings" class="page">
+    <div class="card"><div class="ct">👥 TÊN TUYỂN THỦ</div><div id="player-editor"></div></div>
+    <div class="card">
+      <div class="ct">🏆 GIẢI ĐẤU &amp; ĐẾM NGƯỢC</div>
+      <div class="g2"><div><label class="lbl">TÊN GIẢI</label><input id="cfg-event" oninput="saveConfig()"></div><div><label class="lbl">NGÀY THI ĐẤU</label><input type="date" id="cfg-date" oninput="saveConfig()"></div></div>
+      <div style="margin-top:12px"><label class="lbl">⏰ GIỜ ĐIỂM DANH</label><input type="time" id="cfg-checkin" style="margin-top:6px" onchange="saveCfg()"></div>
+    </div>
+    <div class="card"><div class="ct">🎯 ĐỘI ĐỐI THỦ</div><div id="opp-editor"></div><div class="flex" style="margin-top:12px"><input id="new-opp" placeholder="Tên đội mới..." style="flex:1" onkeydown="if(event.key==='Enter')addOpp()"><button class="btn btn-green" onclick="addOpp()">+ Thêm</button></div></div>
+    <div class="card">
+      <div class="ct">🗡️ DANH SÁCH TƯỚNG</div>
+      <div id="hero-editor" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+      <div class="flex"><input id="new-hero" placeholder="Tên tướng mới..." style="flex:1" onkeydown="if(event.key==='Enter')addHero()"><button class="btn btn-green" onclick="addHero()">+ Thêm</button></div>
+    </div>
+    <div class="card" style="border-color:#a855f755">
+      <div class="ct" style="color:var(--purple)">🔐 RESET MẬT KHẨU TUYỂN THỦ</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Dùng khi tuyển thủ quên mật khẩu.</div>
+      <div id="pass-editor"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="hero-modal" class="modal">
+  <div class="modal-box">
+    <div class="ct">✏️ SỬA TÊN TƯỚNG</div>
+    <input type="hidden" id="hm-meta">
+    <div style="margin-bottom:14px"><label class="lbl">TÊN MỚI</label><input id="hm-inp"></div>
+    <div class="flex"><button class="btn btn-gf" style="flex:1" onclick="saveHeroRename()">💾 Lưu</button><button class="btn btn-gray" onclick="closeModal('hero-modal')">Hủy</button></div>
+  </div>
+</div>
+
+<div id="event-modal" class="modal">
+  <div class="modal-box">
+    <div class="ct" id="em-title">➕ THÊM SỰ KIỆN</div>
+    <input type="hidden" id="em-id">
+    <div style="margin-bottom:10px"><label class="lbl">NGÀY</label><input type="date" id="em-date"></div>
+    <div class="g2" style="margin-bottom:10px">
+      <div><label class="lbl">GIỜ BẮT ĐẦU</label><input type="time" id="em-time"></div>
+      <div><label class="lbl">GIỜ KẾT THÚC</label><input type="time" id="em-endtime"></div>
+    </div>
+    <div style="margin-bottom:10px"><label class="lbl">LOẠI SỰ KIỆN</label>
+      <select id="em-type">
+        <option value="scrim">⚔️ Scrim</option>
+        <option value="match">🏆 Thi đấu chính thức</option>
+        <option value="training">🗡️ Tập luyện</option>
+        <option value="meeting">💬 Họp đội</option>
+        <option value="rest">😴 Ngày nghỉ</option>
+      </select>
+    </div>
+    <div style="margin-bottom:10px"><label class="lbl">TIÊU ĐỀ</label><input id="em-name" placeholder="VD: Scrim vs Flash Wolves"></div>
+    <div style="margin-bottom:14px"><label class="lbl">GHI CHÚ</label><textarea id="em-note" placeholder="Chi tiết sự kiện..." style="min-height:60px"></textarea></div>
+    <div class="flex"><button class="btn btn-gf" style="flex:1" onclick="saveEvent()">💾 Lưu</button><button class="btn btn-gray" onclick="closeModal('event-modal')">Hủy</button></div>
+  </div>
+</div>
+
+<div id="pdf-modal" class="modal">
+  <div class="modal-box" id="pdf-content">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:32px">🐝</div>
+      <div style="font-size:18px;font-weight:900;color:var(--gold)">BÁO CÁO TUẦN</div>
+      <div id="pdf-week-label" style="font-size:12px;color:var(--muted)"></div>
+    </div>
+    <div id="pdf-body"></div>
+    <div class="flex" style="margin-top:16px">
+      <button class="btn btn-gf" style="flex:1" onclick="window.print()">🖨️ In / Lưu PDF</button>
+      <button class="btn btn-gray" onclick="closeModal('pdf-modal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// SUPABASE CONFIG
+// ══════════════════════════════════════════════════
+const SB_URL="https://hmvlbcpyfytuluolgsys.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtdmxiY3B5Znl0dWx1b2xnc3lzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MTY3MjQsImV4cCI6MjA5NDE5MjcyNH0.blFYxOZLZtrjK6HId56kslrpn6IUCvj3B7quk5NqhOU";
+const SB_H={"Content-Type":"application/json","apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY};
+const TB=SB_URL+"/rest/v1/fpl_data";
+
+async function sbGet(k){try{var r=await fetch(TB+"?key=eq."+encodeURIComponent(k)+"&select=value",{headers:SB_H});if(!r.ok)return null;var a=await r.json();return a.length?a[0].value:null;}catch(e){return null;}}
+async function sbSet(k,v){try{var r=await fetch(TB,{method:"POST",headers:Object.assign({},SB_H,{"Prefer":"resolution=merge-duplicates"}),body:JSON.stringify({key:k,value:v})});return r.ok||r.status===201;}catch(e){return false;}}
+async function dbGet(k){return await sbGet(k);}
+async function dbSet(k,v){return await sbSet(k,v);}
+
+// ══════════════════════════════════════════════════
+// DEFAULTS
+// ══════════════════════════════════════════════════
+const DEF_HEROES=["Airi","Alice","Allain","Amily","Annette","Arduin","Arthur","Astrid","Ata","Alucard","Arum","Baldum","Bijan","Butterfly","Capheny","Chaugnar","Cresht","Dextra","Dirak","Điêu Thuyền","Dyadia","Eland'orr","Elsu","Errol","Fennik","Florentino","Grakk","Hayate","Ignis","Ilumia","Ishar","Jinna","Kahlii","Keera","Kil'Groth","Kriknak","Krixi","Krizzix","Laville","Lauriel","Liliana","Lorion","Lữ Bố","Maloch","Marja","Mganga","Mina","Murad","Nakroth","Natalya","Omen","Ormarr","Paine","Preyta","Qi","Quillen","Raz","Richter","Rourke","Rouie","Roxie","Ryoma","Sephera","Skud","Slimz","Superman","Tachi","Taara","Tel'Annas","Thane","Toro","Triệu Vân","Tulen","Valhein","Veera","Veres","Violet","Volkath","Wiro","Wukong","Wonder Woman","Xeniel","Yan","Y'bneth","Yena","Yorn","Yue","Zata","Zephys","Zip","Zuka","FlowBornMage","FlowBornAD"];
+const DEF_OPPS=["Flash Wolves","SGP","DCG","GAM","FS","ANK","SLX","BRU","FPT Flash","HKA","BMG","LIT","ONE","BAC","HD","TEN","GJC","KOG","EA","BOX","SW","SPN","1S","BACD","RK7","TONY","Đội khác"];
+const PIDS=["p1","p2","p3","p4","p5","p6"];
+const FIXED={coach:{name:"Coach",pos:"Coach",avatar:"🎯",isCoach:true},manager:{name:"Quản Lý",pos:"Quản Lý",avatar:"👔",isManager:true},assist:{name:"Trợ Lý",pos:"Trợ Lý",avatar:"📋",isAssist:true},supv:{name:"Supv",pos:"Kiểm Soát Viên",avatar:"🔍",isSupv:true}};
+const DEF_PLAYERS={p1:{name:"OGUU",pos:"JUG",avatar:"🐷"},p2:{name:"Sleepy",pos:"MID",avatar:"🐱"},p3:{name:"ThanhDuy",pos:"ADL",avatar:"🏹"},p4:{name:"TheKhang",pos:"SUP",avatar:"🛡️"},p5:{name:"VIT",pos:"DSL",avatar:"🔥"},p6:{name:"TacK4",pos:"MID SUB",avatar:"⭐"}};
+const EVENT_COLORS={scrim:"#3b82f6",match:"#22c55e",training:"#f97316",meeting:"#a855f7",rest:"#3D5470"};
+const EVENT_LABELS={scrim:"⚔️ Scrim",match:"🏆 Thi đấu",training:"🗡️ Tập luyện",meeting:"💬 Họp đội",rest:"😴 Nghỉ"};
+function defCFG(){return{eventName:"APL 2026",eventDate:"2026-06-15",checkinTime:"08:30",heroes:DEF_HEROES.slice(),opponents:DEF_OPPS.slice(),passes:{coach:"fpl2026",manager:"mgr2026",assist:"ast2026",supv:"supv2026",p1:"fpl_p1",p2:"fpl_p2",p3:"fpl_p3",p4:"fpl_p4",p5:"fpl_p5",p6:"fpl_p6"},players:Object.assign({},DEF_PLAYERS)};}
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+var CFG=defCFG(),DATA={attendance:{},scrims:[],weekTasks:{},performance:{},announcements:[],dailyNotes:[],coachPrivate:"",events:[],absences:[],oppNotes:{},journals:{}};
+var CU=null,CID=null;
+var attOff=0,trainOff=0,perfOff=0;
+var calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+var selDay=null;
+var saveQ={};
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+function today(){
+  var now=new Date();
+  return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Ho_Chi_Minh",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
+}
+function wkS(off){
+  var vnToday=today();
+  var d=new Date(vnToday+"T00:00:00");
+  var day=d.getDay();
+  d.setDate(d.getDate()-(day===0?6:day-1)+((off||0)*7));
+  return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+}
+function wkL(ws){const d=new Date(ws);const e=new Date(ws);e.setDate(e.getDate()+6);return d.toLocaleDateString("vi-VN",{day:"2-digit",month:"2-digit"})+" – "+e.toLocaleDateString("vi-VN",{day:"2-digit",month:"2-digit"});}
+function daysUntil(ds){return Math.ceil((new Date(ds)-new Date(today()))/86400000);}
+function rc(r){return r==="Win"?"#22c55e":r==="Loss"?"#ef4444":"#C8A94A";}
+function mkTag(t,c){return'<span class="tag" style="background:'+c+'22;border:1px solid '+c+';color:'+c+'">'+t+'</span>';}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function pInfo(pid){var p=CFG.players&&CFG.players[pid];const d=DEF_PLAYERS[pid]||{name:pid,pos:pid,avatar:"🎮"};return p?{name:p.name||d.name,pos:p.pos||d.pos,avatar:p.avatar||d.avatar}:d;}
+
+// ══════════════════════════════════════════════════
+// BUG FIX 1: getStreak - dùng today() thay vì toISOString()
+// để đúng timezone VN, tránh streak bị reset về 1
+// ══════════════════════════════════════════════════
+function getStreak(pid){
+  var s=0;
+  var td=today();
+  for(var i=0;i<60;i++){
+    var d=new Date(td+"T00:00:00");
+    d.setDate(d.getDate()-i);
+    var dk=[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+    var r=DATA.attendance[dk+"_"+pid];
+    if(r&&r.status!=="absent")s++;
+    else if(i>0)break;
+  }
+  return s;
+}
+
+function showToast(m,c){const t=document.getElementById("toast");t.textContent=m;t.style.background=c||"#22c55e";t.style.color=c?"#fff":"#030709";t.style.display="block";setTimeout(function(){t.style.display="none";},2800);}
+function openModal(id){document.getElementById(id).classList.add("open");}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
+function dSaveNow(k,v){clearTimeout(saveQ[k]);dbSet(k,v);}
+function dSave(k,v,d){clearTimeout(saveQ[k]);saveQ[k]=setTimeout(function(){dbSet(k,v);},d||1500);}
+
+// ══════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════
+window.onload=async function(){
+  document.getElementById("loading").style.display="flex";
+  try{
+    var results=await Promise.all([
+      dbGet("config"),dbGet("attendance"),dbGet("scrims"),dbGet("weekTasks"),
+      dbGet("performance"),dbGet("announcements"),dbGet("dailyNotes"),dbGet("coachPrivate"),
+      dbGet("events"),dbGet("absences"),dbGet("oppNotes"),dbGet("journals")
+    ]);
+    var cfg=results[0],att=results[1],sc=results[2],wt=results[3];
+    var perf=results[4],anns=results[5],dn=results[6],cp=results[7];
+    var ev=results[8],abs=results[9],oppN=results[10],jour=results[11];
+    if(cfg)CFG=Object.assign(defCFG(),cfg);
+    if(att)DATA.attendance=att;
+    if(sc)DATA.scrims=Array.isArray(sc)?sc:[];
+    if(wt)DATA.weekTasks=wt;
+    if(perf)DATA.performance=perf;
+    if(anns)DATA.announcements=Array.isArray(anns)?anns:[];
+    if(dn)DATA.dailyNotes=Array.isArray(dn)?dn:[];
+    if(cp)DATA.coachPrivate=cp;
+    if(ev)DATA.events=Array.isArray(ev)?ev:[];
+    if(abs)DATA.absences=Array.isArray(abs)?abs:[];
+    if(oppN)DATA.oppNotes=oppN;
+    if(jour)DATA.journals=jour||{};
+  }catch(e){console.warn("Load error:",e);}
+  document.getElementById("loading").style.display="none";
+  buildLoginDropdown();
+  populateScrimWeeks();
+  setInterval(refreshData,10000);
+  if(!checkAutoLogin()){
+    document.getElementById("app").style.display="none";
+    document.getElementById("login-page").style.display="flex";
+  }
+};
+
+function buildLoginDropdown(){
+  const sel=document.getElementById("ls");
+  sel.innerHTML='<option value="">— Chọn vai trò —</option>'+
+    '<option value="coach">🎯 Coach</option>'+
+    '<option value="manager">👔 Quản Lý</option>'+
+    '<option value="assist">📋 Trợ Lý</option>'+'<option value="supv">🔍 Supv (Kiểm Soát Viên)</option>'+
+    PIDS.map(function(pid){var p=pInfo(pid);return'<option value="'+pid+'">'+p.avatar+' '+esc(p.name)+' ('+esc(p.pos)+')</option>';}).join("");
+}
+
+async function refreshData(){if(!CU)return;try{
+  var rd=await Promise.all([dbGet("attendance"),dbGet("scrims"),dbGet("announcements"),dbGet("dailyNotes"),dbGet("events"),dbGet("absences"),dbGet("weekTasks")]);
+  if(rd[0])DATA.attendance=rd[0];
+  if(rd[1])DATA.scrims=Array.isArray(rd[1])?rd[1]:[];
+  if(rd[2])DATA.announcements=Array.isArray(rd[2])?rd[2]:[];
+  if(rd[3])DATA.dailyNotes=Array.isArray(rd[3])?rd[3]:[];
+  if(rd[4])DATA.events=Array.isArray(rd[4])?rd[4]:[];
+  if(rd[5])DATA.absences=Array.isArray(rd[5])?rd[5]:[];
+  if(rd[6])DATA.weekTasks=rd[6];
+  var pd=document.getElementById("page-dashboard");
+  var pa=document.getElementById("page-attendance");
+  var pt=document.getElementById("page-training");
+  var ph=document.getElementById("page-herostats");
+  if(pd&&pd.classList.contains("active"))renderDashboard();
+  if(pa&&pa.classList.contains("active"))renderAtt();
+  if(pt&&pt.classList.contains("active"))renderTraining();
+  if(ph&&ph.classList.contains("active"))renderHeroStats();
+  updateHdrStats();
+}catch(e){}}
+
+// ══════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════
+function togglePwd(){const i=document.getElementById("lp");const e=document.getElementById("pwd-eye");i.type=i.type==="password"?"text":"password";e.textContent=i.type==="password"?"👁️":"🙈";}
+
+function doLogin(){
+  var id=document.getElementById("ls").value;
+  var pass=document.getElementById("lp").value;
+  var err=document.getElementById("login-err");
+  if(!id){err.textContent="Vui lòng chọn tài khoản!";err.style.display="block";return;}
+  if(!pass||pass!==CFG.passes[id]){err.textContent="Sai mật khẩu!";err.style.display="block";return;}
+  err.style.display="none";
+  try{localStorage.setItem("fpl_sess",JSON.stringify({id:id,pass:pass,ts:Date.now()}));}catch(e){}
+  loginUser(id);
+}
+
+function loginUser(id){
+  CID=id;
+  if(FIXED[id])CU=Object.assign({},FIXED[id]);
+  else CU=Object.assign({},pInfo(id),{isCoach:false,isManager:false,isAssist:false});
+  document.getElementById("login-page").style.display="none";
+  document.getElementById("app").style.display="block";
+  var stab=document.getElementById("settings-tab");
+  if(stab)stab.style.display=(CU.isCoach||CU.isManager||CU.isSupv)?"block":"none";
+  document.getElementById("hdr-av").textContent=CU.avatar;
+  document.getElementById("hdr-name").textContent=CU.name;
+  document.getElementById("hdr-pos").textContent=CU.pos;
+  document.getElementById("hdr-event").textContent=CFG.eventName||"APL 2026";
+  updateHdrStats();
+  renderDashboard();
+  gotoTab("dashboard",document.querySelector(".tab-btn"));
+}
+
+function checkAutoLogin(){
+  try{
+    var s=JSON.parse(localStorage.getItem("fpl_sess")||"null");
+    if(!s)return false;
+    if(Date.now()-s.ts>30*24*60*60*1000){localStorage.removeItem("fpl_sess");return false;}
+    if(!CFG.passes[s.id]||CFG.passes[s.id]!==s.pass){localStorage.removeItem("fpl_sess");return false;}
+    loginUser(s.id);return true;
+  }catch(e){return false;}
+}
+
+function logout(){try{localStorage.removeItem("fpl_sess");}catch(e){}CU=null;CID=null;document.getElementById("app").style.display="none";document.getElementById("login-page").style.display="flex";document.getElementById("lp").value="";document.getElementById("ls").value="";}
+
+function updateHdrStats(){
+  const w=DATA.scrims.filter(s=>s.result==="Win").length;
+  document.getElementById("hdr-sc").textContent=DATA.scrims.length;
+  document.getElementById("hdr-w").textContent=w;
+  document.getElementById("hdr-wr").textContent=DATA.scrims.length?Math.round(w/DATA.scrims.length*100)+"%":"—";
+}
+
+function gotoTab(id,btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  if(btn)btn.classList.add("active");
+  if(id==="settings")renderSettings();
+  if(id==="account")renderAccount();
+  if(id==="opponents")renderOpponents();
+  if(id==="ranking")renderRanking();
+  if(id==="schedule")renderSchedule();
+  if(id==="herostats")renderHeroStats();
+  if(id==="scrim")renderScrim();
+  if(id==="performance")renderPerf();
+  if(id==="training")renderTraining();
+  if(id==="attendance")renderAtt();
+}
+
+// ══════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════
+function renderDashboard(){
+  const td=today();const wk=wkS(0);
+  const isCoach=CU.isCoach||CU.isManager;
+  const dLeft=daysUntil(CFG.eventDate||"2026-06-15");
+  const dlc=dLeft<=7?"#ef4444":dLeft<=30?"#C8A94A":"#22c55e";
+  document.getElementById("cd-label").textContent=(CFG.eventName||"APL 2026")+" · ĐẾM NGƯỢC";
+  document.getElementById("cd-val").innerHTML='<span style="color:'+dlc+'">'+dLeft+'</span><span style="font-size:14px;color:var(--muted);margin-left:6px">ngày</span>';
+  const thisW=DATA.scrims.filter(s=>s.week===wk);
+  const tW=thisW.filter(s=>s.result==="Win").length;
+  const tWR=thisW.length?Math.round(tW/thisW.length*100):0;
+  const wrc=tWR>=60?"#22c55e":tWR>=40?"#C8A94A":"#ef4444";
+  document.getElementById("dash-stats").innerHTML=mStat(tW+"W-"+(thisW.length-tW)+"L","TUẦN NÀY",wrc)+mStat(thisW.length?tWR+"%":"—","WIN RATE",wrc)+mStat(DATA.scrims.length,"TỔNG SCRIM","#3b82f6");
+  const absBox=document.getElementById("absence-alerts");
+  const pendAbs=DATA.absences.filter(a=>a.status==="pending"&&a.date>=td);
+  if(isCoach&&pendAbs.length){absBox.innerHTML='<div class="card" style="border-color:#f9731644"><div class="ct" style="color:var(--orange)">📩 BÁO VẮNG CHỜ DUYỆT ('+pendAbs.length+')</div>'+pendAbs.map((a,i)=>{const p=pInfo(a.pid);return'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;background:var(--mid);border-radius:8px;padding:10px 12px"><span>'+p.avatar+'</span><div style="flex:1"><div style="font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--muted)">'+a.date+' · '+esc(a.reason)+'</div></div><button class="btn btn-green btn-sm" onclick="approveAbs(\''+a.id+'\')">✓ Duyệt</button><button class="btn btn-red btn-sm" onclick="rejectAbs(\''+a.id+'\')">✗</button></div>';}).join("")+'</div>';}else absBox.innerHTML="";
+  const annBox=document.getElementById("ann-box");
+  const annInp=document.getElementById("ann-input");
+  if(annInp)annInp.style.display=isCoach?"flex":"none";
+  if(DATA.announcements.length){annBox.innerHTML='<div class="card" style="border-color:#C8A94A44"><div class="ct">📢 THÔNG BÁO ĐỘI</div>'+DATA.announcements.slice(0,4).map((a,i)=>{const del=isCoach?'<button class="btn btn-red btn-sm" onclick="delAnn('+i+')">✕</button>':"";return'<div class="ann-item"><div style="flex:1"><div style="font-size:13px">'+esc(a.text)+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+esc(a.author)+' · '+a.date+'</div></div>'+del+'</div>';}).join("")+'</div>';}else annBox.innerHTML="";
+  const cnb=document.getElementById("coach-note-box");
+  cnb.style.display=CU.isCoach?"block":"none";
+  const tnotes=DATA.dailyNotes.filter(n=>n.date===td).slice(0,3);
+  const pnb=document.getElementById("player-note-box");
+  if(!CU.isCoach&&tnotes.length)pnb.innerHTML='<div class="card" style="border-color:#3b82f633"><div class="ct" style="color:var(--blue)">📝 GHI CHÚ TỪ COACH HÔM NAY</div>'+tnotes.map(n=>'<div style="font-size:13px;padding:8px 12px;background:var(--mid);border-radius:7px;margin-bottom:6px;border-left:3px solid #3b82f6">'+esc(n.text)+'</div>').join("")+'</div>';
+  else pnb.innerHTML="";
+  const msb=document.getElementById("my-stats-box");
+  if(!CU.isCoach&&!CU.isAssist&&!CU.isManager){
+    const wD=Array.from({length:7},(_,i)=>{const d=new Date(wk);d.setDate(d.getDate()+i);return d.toISOString().slice(0,10);});
+    const myPres=wD.filter(d=>d<=td&&DATA.attendance[d+"_"+CID]).length;
+    const myTot=wD.filter(d=>d<=td).length||1;
+    const streak=getStreak(CID);
+    const pdWk=DATA.performance[wk]||{};const myPd=pdWk[CID]||{};
+    const sc2=[myPd.mechanics,myPd.macro,myPd.mental].filter(Boolean).map(Number);
+    const avg=sc2.length===3?Math.round(sc2.reduce((a,b)=>a+b,0)/3*10)/10:"—";
+    msb.innerHTML='<div class="card" style="border-color:#a855f744"><div class="ct" style="color:var(--purple)">👤 THỐNG KÊ CỦA BẠN</div><div class="g3">'+mCard("ĐIỂM DANH TUẦN",myPres+"/"+myTot,"#22c55e")+mCard("STREAK",streak+"🔥","#f97316")+mCard("ĐIỂM TB",avg,"#C8A94A")+'</div></div>';
+  }else msb.innerHTML="";
+  const wD7=Array.from({length:7},(_,i)=>{const d=new Date(wk);d.setDate(d.getDate()+i);return d.toISOString().slice(0,10);});
+  const sorted=[...PIDS].sort((a,b)=>getStreak(b)-getStreak(a));
+  document.getElementById("streak-board").innerHTML=sorted.map((pid,i)=>{
+    const p=pInfo(pid);const streak=getStreak(pid);
+    const pres=wD7.filter(d=>{const r=DATA.attendance[d+"_"+pid];return d<=td&&r&&r.status!=="absent";}).length;
+    const tot=wD7.filter(d=>d<=td).length||1;
+    const pct=Math.round(pres/tot*100);
+    return'<div style="flex:1;min-width:100px;background:var(--mid);border:1px solid '+(i===0?"var(--gold)":"var(--bdr)")+';border-radius:10px;padding:12px 10px;text-align:center">'+
+      (i===0?'<div style="font-size:10px;color:var(--gold);font-weight:700;margin-bottom:4px">🏆 #1</div>':'')+
+      '<div style="font-size:22px">'+p.avatar+'</div><div style="font-size:12px;font-weight:700;margin:4px 0">'+esc(p.name)+'</div>'+
+      '<div style="font-size:18px;font-weight:900;color:'+(streak>=5?"#22c55e":streak>=3?"#C8A94A":"#3D5470")+'">'+streak+'🔥</div>'+
+      '<div style="font-size:10px;color:var(--muted)">streak</div>'+
+      '<div style="margin-top:5px;font-size:11px;color:'+(pct>=80?"#22c55e":pct>=60?"#C8A94A":"#ef4444")+';font-weight:700">'+pct+'% tuần</div></div>';
+  }).join("");
+  const cpb=document.getElementById("coach-private-box");
+  if(CU.isCoach)cpb.innerHTML='<div class="card" style="border-color:#a855f755"><div class="ct" style="color:var(--purple)">🔒 GHI CHÚ NỘI BỘ COACH</div><textarea id="cp-ta" style="min-height:120px" placeholder="Kế hoạch BP, nhận xét riêng..." oninput="DATA.coachPrivate=this.value;dSave(\'coachPrivate\',this.value,2000)">'+esc(DATA.coachPrivate)+'</textarea></div>';
+  else cpb.innerHTML="";
+}
+function mStat(v,l,c){return'<div style="background:var(--dark);border:1px solid '+c+'33;border-radius:10px;padding:10px 14px;text-align:center;min-width:88px"><div style="font-size:17px;font-weight:900;color:'+c+'">'+v+'</div><div style="font-size:9px;color:var(--muted);letter-spacing:1.5px">'+l+'</div></div>';}
+function mCard(l,v,c){return'<div style="background:var(--mid);border:1px solid '+c+'22;border-radius:10px;padding:12px 8px;text-align:center"><div style="font-size:22px;font-weight:900;color:'+c+'">'+v+'</div><div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:2px">'+l+'</div></div>';}
+function addAnn(){const inp=document.getElementById("ann-inp");if(!inp.value.trim())return;DATA.announcements.unshift({text:inp.value,date:today(),author:CU.name});inp.value="";dSave("announcements",DATA.announcements,500);renderDashboard();}
+function delAnn(i){DATA.announcements.splice(i,1);dSave("announcements",DATA.announcements,500);renderDashboard();}
+function addNote(){const inp=document.getElementById("note-inp");if(!inp.value.trim())return;DATA.dailyNotes.unshift({text:inp.value,date:today(),author:CU.name});inp.value="";dSave("dailyNotes",DATA.dailyNotes,500);renderDashboard();}
+
+// ══════════════════════════════════════════════════
+// ABSENCE
+// ══════════════════════════════════════════════════
+function submitAbsence(){
+  const date=document.getElementById("abs-date").value;
+  const reason=document.getElementById("abs-reason").value;
+  const note=document.getElementById("abs-note").value;
+  if(!date||!reason){showToast("Vui lòng chọn ngày và lý do!","#ef4444");return;}
+  DATA.absences.push({id:String(Date.now()),pid:CID,date,reason,note,status:"pending",submittedAt:today()});
+  dSave("absences",DATA.absences,300);
+  document.getElementById("abs-date").value="";document.getElementById("abs-reason").value="";document.getElementById("abs-note").value="";
+  showToast("📩 Đã gửi báo vắng!");renderDashboard();
+}
+function approveAbs(id){
+  var idx=DATA.absences.findIndex(a=>String(a.id)===String(id));
+  if(idx>=0){
+    var abs=DATA.absences[idx];
+    DATA.absences[idx].status="approved";
+    DATA.attendance[abs.date+"_"+abs.pid]={time:"Báo vắng",status:"absent"};
+    dSave("absences",DATA.absences,300);dSave("attendance",DATA.attendance,300);
+    showToast("✅ Đã duyệt báo vắng!");renderDashboard();renderAtt();
+  }
+}
+function rejectAbs(id){
+  var idx=DATA.absences.findIndex(a=>String(a.id)===String(id));
+  if(idx>=0){DATA.absences[idx].status="rejected";dSave("absences",DATA.absences,300);showToast("❌ Đã từ chối","#ef4444");renderDashboard();}
+}
+
+// ══════════════════════════════════════════════════
+// ATTENDANCE
+// ══════════════════════════════════════════════════
+function renderAtt(){
+  const td=today();const isCoach=CU.isCoach||CU.isManager;
+  const SC={present:"#22c55e",late:"#C8A94A",absent:"#ef4444"};
+  const SL={present:"✅ Đúng giờ",late:"🟡 Muộn",absent:"❌ Vắng"};
+  const abf=document.getElementById("absence-form-box");
+  abf.style.display=(!isCoach&&!CU.isAssist)?"block":"none";
+  if(!isCoach&&!CU.isAssist)document.getElementById("abs-date").min=today();
+  const myCard=document.getElementById("my-checkin");
+  if(!isCoach&&!CU.isAssist){
+    myCard.style.display="block";
+    const myS=DATA.attendance[td+"_"+CID];
+    myCard.style.borderColor=(myS?SC[myS.status]||"#22c55e":"#C8A94A")+"55";
+    myCard.innerHTML='<div class="flex"><span style="font-size:42px">'+CU.avatar+'</span><div style="flex:1"><div style="font-weight:900;font-size:16px">'+esc(CU.name)+'</div><div style="font-size:11px;color:var(--muted)">'+new Date().toLocaleDateString("vi-VN",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"})+'</div></div>'+(myS?'<div style="text-align:center">'+mkTag(SL[myS.status]||"OK",SC[myS.status]||"#22c55e")+'<div style="font-size:11px;color:#22c55e;margin-top:4px">'+myS.time+'</div></div>':'<button class="btn btn-green" onclick="doCheckIn()">👆 ĐIỂM DANH NGAY</button>')+'</div>';
+  }else myCard.style.display="none";
+  document.getElementById("att-today-title").textContent="📋 HÔM NAY — "+new Date().toLocaleDateString("vi-VN",{weekday:"long",day:"2-digit",month:"2-digit"});
+  document.getElementById("att-grid").innerHTML=PIDS.map(pid=>{
+    const p=pInfo(pid);const s=DATA.attendance[td+"_"+pid];
+    const bc=s?SC[s.status]||"#22c55e":"var(--bdr)";
+    const hasAbs=DATA.absences.some(a=>a.pid===pid&&a.date===td&&a.status==="approved");
+    const manBtns=isCoach?'<div style="display:flex;gap:3px;margin-top:8px;justify-content:center">'+["present","late","absent"].map(st=>'<button onclick="markAtt(\''+pid+'\',\''+td+'\',\''+st+'\')" style="font-size:9px;padding:2px 6px;border-radius:4px;cursor:pointer;font-family:inherit;font-weight:700;border:1px solid '+SC[st]+';background:'+(s&&s.status===st?SC[st]+"44":"transparent")+';color:'+SC[st]+'">'+(st==="present"?"✓":st==="late"?"~":"✗")+'</button>').join("")+'</div>':"";
+    return'<div class="player-chip" style="border-color:'+bc+'"><div style="font-size:26px;margin-bottom:4px">'+p.avatar+'</div><div style="font-weight:700;font-size:13px">'+esc(p.name)+'</div><div style="font-size:10px;color:var(--muted);margin-bottom:6px">'+p.pos+'</div>'+(hasAbs&&!s?'<span class="absence-badge">📩 Báo vắng</span>':"")+(s?mkTag(SL[s.status]||"OK",SC[s.status]||"#22c55e")+'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+s.time+'</div>':(!hasAbs?'<span style="font-size:11px;color:var(--red)">⬜ Chưa điểm</span>':""))+manBtns+'</div>';
+  }).join("");
+  document.getElementById("att-sum").textContent="Đã điểm: "+PIDS.filter(pid=>{const s=DATA.attendance[td+"_"+pid];return s&&s.status!=="absent";}).length+" / "+PIDS.length;
+  const pa=document.getElementById("pending-absences");
+  const pending=DATA.absences.filter(a=>a.status==="pending");
+  if(isCoach&&pending.length)pa.innerHTML='<div class="card" style="border-color:#f9731644"><div class="ct" style="color:var(--orange)">📩 BÁO VẮNG CHỜ DUYỆT</div>'+pending.map(a=>{const p=pInfo(a.pid);return'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;background:var(--mid);border-radius:8px;padding:10px 12px"><span>'+p.avatar+'</span><div style="flex:1"><div style="font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--muted)">'+a.date+' · '+esc(a.reason)+'</div></div><button class="btn btn-green btn-sm" onclick="approveAbs(\''+a.id+'\')">✓</button><button class="btn btn-red btn-sm" onclick="rejectAbs(\''+a.id+'\')">✗</button></div>';}).join("")+'</div>';
+  else pa.innerHTML="";
+  const vw=wkS(attOff);
+  document.getElementById("att-wk").textContent=wkL(vw);
+  const wDays=Array.from({length:7},(_,i)=>{const d=new Date(vw);d.setDate(d.getDate()+i);return{date:d.toISOString().slice(0,10),label:d.toLocaleDateString("vi-VN",{weekday:"short"}),day:d.getDate(),month:d.getMonth()+1};});
+  document.getElementById("att-th").innerHTML='<th style="text-align:left;padding:7px 12px">Tuyển thủ</th>'+wDays.map(d=>'<th style="color:'+(d.date===td?"var(--gold)":"var(--muted)")+';white-space:nowrap">'+d.label+'<br><span style="font-weight:400">'+d.day+"/"+d.month+'</span></th>').join("")+'<th>Tỉ lệ</th>';
+  document.getElementById("att-tb").innerHTML=PIDS.map(pid=>{
+    const p=pInfo(pid);
+    const pres=wDays.filter(d=>{const r=DATA.attendance[d.date+"_"+pid];return r&&r.status!=="absent";}).length;
+    const cnt=wDays.filter(d=>d.date<=td).length||1;
+    const pct=Math.round(pres/cnt*100);
+    return'<tr><td><span style="margin-right:6px">'+p.avatar+'</span><span style="font-weight:700">'+esc(p.name)+'</span><span style="font-size:10px;color:var(--muted);margin-left:6px">'+p.pos+'</span></td>'+wDays.map(d=>{const s=DATA.attendance[d.date+"_"+pid];return'<td>'+(s?'<span style="font-size:14px;color:'+(SC[s.status]||"#22c55e")+'">'+(s.status==="absent"?"❌":s.status==="late"?"🟡":"✅")+'</span>':d.date>td?'<span style="color:var(--bdr)">—</span>':'<span style="font-size:14px">⬜</span>')+'</td>';}).join("")+'<td><span style="font-weight:800;color:'+(pct>=80?"#22c55e":pct>=60?"#C8A94A":"#ef4444")+'">'+pct+'%</span></td></tr>';
+  }).join("");
+}
+
+function doCheckIn(){
+  var td=today();var key=td+"_"+CID;
+  if(DATA.attendance[key]){showToast("Bạn đã điểm danh rồi!","#f97316");return;}
+  var now=new Date();var nowH=now.getHours();var nowM=now.getMinutes();
+  if(nowH<6){showToast("⏰ Chưa đến giờ điểm danh!","#ef4444");return;}
+  var ct=(CFG.checkinTime||"08:30").split(":");
+  var ctMins=parseInt(ct[0])*60+parseInt(ct[1]);
+  var nowMins=nowH*60+nowM;
+  var status=nowMins>ctMins+15?"late":"present";
+  var time=now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
+  DATA.attendance[key]={time,status};
+  dSave("attendance",DATA.attendance,500);
+  renderAtt();renderDashboard();
+  showToast(status==="late"?"⚠️ Điểm danh MUỘN! "+time:"✅ Đúng giờ! "+time,status==="late"?"#f97316":undefined);
+}
+function markAtt(pid,date,status){const key=date+"_"+pid;const cur=DATA.attendance[key];if(cur&&cur.status===status)delete DATA.attendance[key];else DATA.attendance[key]={time:"Manual",status};dSave("attendance",DATA.attendance,500);renderAtt();}
+function attNav(dir){attOff+=dir;renderAtt();}
+
+// ══════════════════════════════════════════════════
+// TRAINING
+// ══════════════════════════════════════════════════
+function renderTraining(){
+  const vw=wkS(trainOff);
+  document.getElementById("train-wk").textContent="🗡️ Lịch tập — "+wkL(vw);
+  const isCoach=CU.isCoach||CU.isManager;
+  const tasks=DATA.weekTasks[vw]||{};
+  const showP=isCoach?PIDS:PIDS.filter(pid=>pid===CID);
+  document.getElementById("training-list").innerHTML=showP.map(pid=>{
+    const p=pInfo(pid);const ptasks=tasks[pid]||{};
+    const list=Object.entries(ptasks);
+    const done=list.filter(([,t])=>t.hero&&parseInt(t.played||0)>=parseInt(t.required||1)).length;
+    const total=list.filter(([,t])=>t.hero).length;
+    const pct=total>0?Math.round(done/total*100):0;
+    const coachBtns=isCoach?'<button class="btn btn-green btn-sm" onclick="addTask(\''+pid+'\')">+ Tướng</button><button class="btn btn-gray btn-sm" onclick="copyPrevTask(\''+pid+'\')">📋 Tuần trước</button>':"";
+    const rows=list.map(([idx,t])=>{
+      const isDone=t.hero&&parseInt(t.played||0)>=parseInt(t.required||1);
+      const hsId="hs-"+pid+"-"+idx;
+      return'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:'+(isDone?"#22c55e0a":"var(--mid)")+';border:1px solid '+(isDone?"#22c55e44":"var(--bdr)")+';border-radius:9px;padding:10px 14px;margin-bottom:8px"><span style="font-size:18px">'+(isDone?"✅":"⬜")+'</span><div style="flex:1;min-width:140px">'+(isCoach?mkHS(hsId,t.hero||"",pid,idx):'<div style="display:flex;align-items:center;gap:6px"><span style="font-weight:700;font-size:14px">'+(t.hero||"—")+'</span><button onclick="openHeroEdit(\''+hsId+'\',\''+pid+'\',\''+idx+'\',\''+esc(t.hero||"")+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0">✏️</button></div>')+'</div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--muted)">Yêu cầu:</span>'+(isCoach?'<input type="number" min="1" max="99" value="'+esc(t.required||"")+'" placeholder="0" onchange="saveTaskF(\''+pid+'\',\''+idx+'\',\'required\',this.value)" style="background:#030709;border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:6px;font-size:13px;width:52px;text-align:center;font-family:inherit;outline:none">':'<span style="font-weight:700;color:var(--gold)">'+(t.required||"?")+'</span>')+'<span style="font-size:11px;color:var(--muted)">game</span></div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:var(--muted)">Đã chơi:</span><input type="number" min="0" max="99" value="'+esc(t.played||"")+'" placeholder="0" onchange="saveTaskF(\''+pid+'\',\''+idx+'\',\'played\',this.value)" style="background:#030709;border:1px solid '+(isDone?"#22c55e":"var(--bdr)")+';border-radius:7px;color:var(--txt);padding:6px;font-size:13px;width:52px;text-align:center;font-family:inherit;outline:none"><span style="font-size:11px;color:var(--muted)">game</span></div>'+(isCoach?'<button class="btn btn-red btn-sm" onclick="removeTask(\''+pid+'\',\''+idx+'\')">✕</button>':"")+' </div>';
+    }).join("");
+    return'<div class="card"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap"><span style="font-size:26px">'+p.avatar+'</span><div style="flex:1"><div style="font-weight:800;font-size:15px">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--muted)">'+p.pos+'</div></div>'+(total>0?'<div style="text-align:right"><div style="font-size:20px;font-weight:900;color:'+(done===total?"#22c55e":done>0?"#C8A94A":"#ef4444")+'">'+pct+'%</div><div style="font-size:9px;color:var(--muted)">'+done+"/"+total+' xong</div></div>':"")+' <div style="display:flex;gap:6px">'+coachBtns+'</div></div>'+(total>0?'<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%;background:'+(done===total?"#22c55e":"#C8A94A")+'"></div></div>':'')+(list.length===0?'<div class="empty" style="padding:12px 0">'+(isCoach?"Nhấn '+ Tướng' để giao nhiệm vụ":"Coach chưa giao nhiệm vụ tuần này")+'</div>':rows)+'</div>';
+  }).join("");
+}
+function mkHS(id,val,pid,idx){return'<div class="hs-wrap"><input id="inp-'+id+'" value="'+esc(val)+'" placeholder="Tìm tướng..." onkeyup="fHS(\''+id+'\')" onfocus="fHS(\''+id+'\')" onblur="setTimeout(()=>cHS(\''+id+'\'),350)" style="background:#030709;border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:8px 12px;font-size:13px;width:100%;font-family:inherit;outline:none"><div id="dd-'+id+'" class="hs-dd" data-pid="'+pid+'" data-idx="'+idx+'"></div></div>';}
+function fHS(id){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(!inp||!dd)return;const q=inp.value.toLowerCase();const heroes=CFG.heroes||DEF_HEROES;const fil=q?heroes.filter(h=>h.toLowerCase().includes(q)):heroes;dd.onmousedown=function(e){e.preventDefault();};dd.innerHTML=fil.map(h=>'<div class="hs-opt" onmousedown="sHS(\''+id+'\',\''+esc(h)+'\')">'+esc(h)+'</div>').join("");dd.classList.add("open");}
+function sHS(id,hero){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(inp)inp.value=hero;if(dd){dd.classList.remove("open");const pid=dd.dataset.pid;const idx=dd.dataset.idx;if(pid&&idx!=null){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};if(!DATA.weekTasks[vw][pid][idx])DATA.weekTasks[vw][pid][idx]={};DATA.weekTasks[vw][pid][idx].hero=hero;dSaveNow("weekTasks",DATA.weekTasks);}}}
+function cHS(id){document.getElementById("dd-"+id)?.classList.remove("open");}
+function saveTaskF(pid,idx,field,val){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};if(!DATA.weekTasks[vw][pid][idx])DATA.weekTasks[vw][pid][idx]={};DATA.weekTasks[vw][pid][idx][field]=val;dSaveNow("weekTasks",DATA.weekTasks);if(field==="played")setTimeout(renderTraining,500);}
+function addTask(pid){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};const existing=Object.keys(DATA.weekTasks[vw][pid]).length;if(existing>=15){showToast("Tối đa 15 tướng mỗi người!","#f97316");return;}const idx=Date.now();DATA.weekTasks[vw][pid][idx]={hero:"",required:"",played:""};dSaveNow("weekTasks",DATA.weekTasks);renderTraining();}
+function removeTask(pid,idx){const vw=wkS(trainOff);if(DATA.weekTasks[vw]?.[pid])delete DATA.weekTasks[vw][pid][idx];dSaveNow("weekTasks",DATA.weekTasks);renderTraining();}
+function copyPrevTask(pid){const vw=wkS(trainOff);const pv=wkS(trainOff-1);const prev=DATA.weekTasks[pv]?.[pid];if(!prev){showToast("Không có dữ liệu tuần trước!","#ef4444");return;}if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};const fresh={};Object.values(prev).forEach((t,i)=>fresh[i]={...t,played:""});DATA.weekTasks[vw][pid]=fresh;dSaveNow("weekTasks",DATA.weekTasks);renderTraining();}
+function trainNav(dir){trainOff+=dir;renderTraining();}
+function openHeroEdit(hsId,pid,idx,cur){openModal("hero-modal");document.getElementById("hm-meta").value=JSON.stringify({pid,idx});document.getElementById("hm-inp").value=cur;}
+function saveHeroRename(){const meta=JSON.parse(document.getElementById("hm-meta").value||"{}");const val=document.getElementById("hm-inp").value.trim();if(!val){closeModal("hero-modal");return;}if(meta.type==="list"){if(!CFG.heroes)CFG.heroes=[...DEF_HEROES];CFG.heroes[meta.i]=val;dSave("config",CFG,500);closeModal("hero-modal");renderSettings();}else if(meta.pid!=null&&meta.idx!=null){saveTaskF(meta.pid,meta.idx,"hero",val);closeModal("hero-modal");}}
+
+// ══════════════════════════════════════════════════
+// SCHEDULE
+// ══════════════════════════════════════════════════
+function renderSchedule(){renderCalendar();renderUpcoming();}
+
+function renderCalendar(){
+  var yr=calYear;var mo=calMonth;
+  document.getElementById("cal-title").textContent="THÁNG "+(mo+1)+"/"+yr;
+  const first=new Date(yr,mo,1);const last=new Date(yr,mo+1,0);
+  let startDay=first.getDay()-1;if(startDay<0)startDay=6;
+  const cells=[];
+  for(let i=0;i<startDay;i++){const d=new Date(yr,mo,1-startDay+i);cells.push({date:d.toISOString().slice(0,10),day:d.getDate(),other:true});}
+  for(let d=1;d<=last.getDate();d++){const dt=new Date(yr,mo,d);cells.push({date:dt.toISOString().slice(0,10),day:d,other:false});}
+  while(cells.length%7!==0){const prev=cells[cells.length-1];const d=new Date(prev.date);d.setDate(d.getDate()+1);cells.push({date:d.toISOString().slice(0,10),day:d.getDate(),other:true});}
+  const td=today();
+  document.getElementById("cal-grid").innerHTML=cells.map(function(c){
+    var evs=DATA.events.filter(function(e){return e.date===c.date;});
+    var isToday=c.date===td;var isSel=c.date===selDay;
+    var hasMatch=evs.some(function(e){return e.type==="match";});
+    var abbrs=evs.slice(0,3).map(function(ev){
+      var cc=EVENT_COLORS[ev.type]||"#3D5470";var lb="";var oppName=ev.opp||ev.name||"";
+      if(ev.type==="training")lb="🗡";else if(ev.type==="rest")lb="😴";else if(ev.type==="meeting")lb="💬";
+      else if(oppName){var ws=oppName.split(" ");lb=ws.length>=2?ws.map(function(w){return w[0]?w[0].toUpperCase():"";}).join(""):oppName.substring(0,4).toUpperCase();}
+      return lb?'<div style="font-size:8px;font-weight:700;color:'+cc+';line-height:1;text-align:center;max-width:36px;overflow:hidden">'+lb+'</div>':"";
+    }).join("");
+    return'<div class="cal-day'+(c.other?" other-month":"")+(isToday?" today":"")+(evs.length?" has-event":"")+(hasMatch?" cal-match":"")+'" style="'+(isSel?"border-color:var(--gold);background:#C8A94A33;":"")+'" onclick="selectDay(\''+c.date+'\')">'+'<span style="font-size:13px;'+(isToday?"font-weight:900;color:var(--gold)":"")+'">'+c.day+'</span>'+abbrs+'</div>';
+  }).join("");
+  var addBtnBox=document.getElementById("add-event-btn-box");
+  if(addBtnBox)addBtnBox.style.display=(CU.isCoach||CU.isManager||CU.isAssist)?"block":"none";
+}
+
+function selectDay(date){
+  selDay=date;renderCalendar();
+  var evs=DATA.events.filter(function(e){return e.date===date;}).sort(function(a,b){return(a.time||"").localeCompare(b.time||"");});
+  var d=new Date(date);
+  document.getElementById("selected-day-title").textContent=d.toLocaleDateString("vi-VN",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"});
+  var canEdit=CU.isCoach||CU.isManager||CU.isAssist;
+  if(!evs.length){document.getElementById("selected-day-events").innerHTML='<div class="empty" style="padding:16px 0;font-size:12px">Không có sự kiện ngày này.'+(canEdit?' Nhấn "+ Thêm" để tạo.':'')+'</div>';}
+  else{document.getElementById("selected-day-events").innerHTML=evs.map(function(ev){
+    var c=EVENT_COLORS[ev.type]||"#3D5470";
+    var del=canEdit?'<button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>':"";
+    var edit=canEdit?'<button class="btn btn-blue btn-sm" onclick="editEvent(\''+ev.id+'\')">✏️</button>':"";
+    return'<div class="sched-row event-type-'+ev.type+'"><div style="min-width:50px"><span class="sched-time" style="font-size:13px;color:'+c+'">'+(ev.time||"—")+'</span><div style="font-size:10px;color:var(--muted)">'+(ev.endtime||"")+'</div></div><div style="flex:1"><div style="font-weight:700;font-size:14px">'+esc(ev.name||EVENT_LABELS[ev.type])+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+mkTag(EVENT_LABELS[ev.type]||ev.type,c)+'</div>'+(ev.note?'<div style="font-size:11px;color:var(--muted);margin-top:4px">'+esc(ev.note)+'</div>':"")+' </div>'+edit+del+'</div>';
+  }).join("");}
+}
+function calNav(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+function calToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCalendar();}
+function openAddEvent(){
+  if(!selDay){showToast("Chọn ngày trên lịch trước!","#ef4444");return;}
+  openModal("event-modal");
+  document.getElementById("em-title").textContent="➕ THÊM SỰ KIỆN";
+  document.getElementById("em-id").value="";
+  document.getElementById("em-date").value=selDay;
+  document.getElementById("em-time").value="";
+  document.getElementById("em-endtime").value="";
+  document.getElementById("em-type").value="scrim";
+  document.getElementById("em-name").value="";
+  document.getElementById("em-note").value="";
+}
+function editEvent(id){
+  const ev=DATA.events.find(e=>String(e.id)===String(id));if(!ev)return;
+  openModal("event-modal");
+  document.getElementById("em-title").textContent="✏️ SỬA SỰ KIỆN";
+  document.getElementById("em-id").value=String(ev.id);
+  document.getElementById("em-date").value=ev.date;
+  document.getElementById("em-time").value=ev.time||"";
+  document.getElementById("em-endtime").value=ev.endtime||"";
+  document.getElementById("em-type").value=ev.type||"scrim";
+  document.getElementById("em-name").value=ev.name||"";
+  document.getElementById("em-note").value=ev.note||"";
+}
+function saveEvent(){
+  var date=document.getElementById("em-date").value;
+  if(!date){showToast("Chọn ngày!","#ef4444");return;}
+  var eid=document.getElementById("em-id").value;
+  var entry={id:eid||String(Date.now()),date:date,time:document.getElementById("em-time").value,endtime:document.getElementById("em-endtime").value,type:document.getElementById("em-type").value,name:document.getElementById("em-name").value,note:document.getElementById("em-note").value};
+  if(eid){var i=DATA.events.findIndex(function(e){return String(e.id)===String(eid);});if(i>=0)DATA.events[i]=entry;else DATA.events.push(entry);}
+  else DATA.events.push(entry);
+  DATA.events.sort(function(a,b){return a.date.localeCompare(b.date)||((a.time||"").localeCompare(b.time||""));});
+  dSave("events",DATA.events,300);closeModal("event-modal");
+  renderCalendar();selectDay(date);renderUpcoming();
+  showToast("💾 Đã lưu sự kiện!");
+}
+
+// ══════════════════════════════════════════════════
+// BUG FIX 2: deleteEvent - dùng String() để so sánh đúng
+// tránh lỗi number vs string khi filter
+// ══════════════════════════════════════════════════
+function deleteEvent(id){
+  if(!confirm("Xóa sự kiện?"))return;
+  DATA.events=DATA.events.filter(e=>String(e.id)!==String(id));
+  dSave("events",DATA.events,300);
+  renderCalendar();
+  if(selDay)selectDay(selDay);
+  renderUpcoming();
+}
+
+function renderUpcoming(){
+  var td=today();
+  var upcoming=DATA.events.filter(function(e){return e.date>=td;}).sort(function(a,b){return a.date.localeCompare(b.date);}).slice(0,10);
+  var canEdit=CU.isCoach||CU.isManager||CU.isAssist;
+  var box=document.getElementById("upcoming-events");
+  if(!upcoming.length){box.innerHTML='<div class="empty" style="padding:20px 0;font-size:12px">Chưa có sự kiện nào.'+(canEdit?' Nhấn vào ngày trên lịch để thêm.':'')+'</div>';return;}
+  box.innerHTML=upcoming.map(function(ev){
+    var c=EVENT_COLORS[ev.type]||"#3D5470";
+    var isToday=ev.date===td;
+    var dateParts=ev.date.split("-");var dateLabel=dateParts[2]+"-"+dateParts[1];
+    var del=canEdit?'<button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>':"";
+    return'<div class="sched-row event-type-'+ev.type+'" style="border-left:3px solid '+c+'"><div style="min-width:55px;text-align:center"><div style="font-size:13px;font-weight:700;color:'+c+'">'+dateLabel+'</div><div style="font-size:10px;color:var(--muted)">'+(isToday?"Hôm nay":ev.date)+'</div></div><div style="flex:1"><div style="font-weight:700;font-size:14px">'+esc(ev.name||EVENT_LABELS[ev.type])+'</div><div style="margin-top:3px">'+mkTag(EVENT_LABELS[ev.type]||ev.type,c)+'</div></div>'+del+'</div>';
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════
+// SCRIM
+// ══════════════════════════════════════════════════
+function populateScrimWeeks(){
+  const sel=document.getElementById("sf-wk");if(!sel)return;
+  const weeks=[];for(let i=-26;i<=26;i++)weeks.push(wkS(i));
+  sel.innerHTML=weeks.map(w=>'<option value="'+w+'">'+(wkL(w))+'</option>').join("");
+  sel.value=wkS(0);
+}
+
+function renderScrim(){
+  var isE=CU.isCoach||CU.isManager||CU.isAssist;
+  document.getElementById("scrim-add-btn").style.display=isE?"block":"none";
+  document.getElementById("pdf-btn-box").style.display=isE?"block":"none";
+  var sel=document.getElementById("sf-opp");
+  if(sel)sel.innerHTML='<option value="">— Chọn —</option>'+(CFG.opponents||DEF_OPPS).map(function(o){return'<option value="'+esc(o)+'">'+esc(o)+'</option>';}).join("");
+  var sc=DATA.scrims;var wk=wkS(0);
+  var thisW=sc.filter(function(s){return s.week===wk;});
+  var tW=thisW.filter(function(s){return s.result==="Win";}).length;
+  var tWR=thisW.length?Math.round(tW/thisW.length*100):0;
+  var totW=sc.filter(function(s){return s.result==="Win"}).length;
+  var totL=sc.filter(function(s){return s.result==="Loss"}).length;
+  var totWR=sc.length?Math.round(totW/sc.length*100):0;
+  document.getElementById("scrim-stats-bar").innerHTML=mCard("TỔNG SCRIM",sc.length,"#3b82f6")+mCard("THẮNG / THUA",totW+"W – "+totL+"L",totWR>=60?"#22c55e":totWR>=40?"#C8A94A":"#ef4444")+mCard("WIN RATE",sc.length?totWR+"%":"—",totWR>=60?"#22c55e":totWR>=40?"#C8A94A":"#ef4444")+mCard("TUẦN NÀY",thisW.length?tWR+"%":"—",tWR>=60?"#22c55e":tWR>=40?"#C8A94A":"#ef4444");
+  var grouped={};sc.forEach(function(s){var w=s.week||wkS(0);if(!grouped[w])grouped[w]=[];grouped[w].push(s);});
+  var weeks=Object.keys(grouped).sort(function(a,b){return b.localeCompare(a);});
+  var list=document.getElementById("scrim-list");
+  if(!weeks.length){list.innerHTML='<div class="empty"><div style="font-size:48px;margin-bottom:12px">⚔️</div><div>'+(isE?"Chưa có scrim — thêm trận đầu tiên!":"Chưa có dữ liệu scrim.")+'</div></div>';return;}
+  list.innerHTML=weeks.map(function(week){
+    var ws=grouped[week];var wW=ws.filter(function(s){return s.result==="Win"}).length;
+    var wPct=ws.length?Math.round(wW/ws.length*100):0;var wPc=wPct>=60?"#22c55e":wPct>=40?"#C8A94A":"#ef4444";
+    return'<div class="week-hdr"><div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1.5px;white-space:nowrap">📅 '+wkL(week)+'</div><div class="week-line"></div><div style="display:flex;align-items:center;gap:8px">'+mkTag(wPct+"% thắng",wPc)+'<span style="font-size:11px;color:var(--muted)">'+wW+"W – "+(ws.length-wW)+"L / "+ws.length+" trận"+'</span></div></div>'+
+      ws.map(function(s){
+        var rcol=rc(s.result);
+        var eb=isE?'<button class="btn btn-blue btn-sm" onclick="editScrim(\''+s.id+'\')">✏️</button><button class="btn btn-red btn-sm" onclick="delScrim(\''+s.id+'\')">🗑</button>':"";
+        var resLabel=s.result==="Win"?"THẮNG 🏆":s.result==="Loss"?"THUA":"HÒA";
+        return'<div class="scrim-card" style="border-color:'+rcol+'44"><div style="height:4px;background:'+rcol+'"></div><div class="scrim-card-top"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+mkTag(s.format||"BO3","#3b82f6")+mkTag(resLabel,rcol)+'</div><div style="font-size:16px;font-weight:900">'+esc(s.opponent)+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+s.date+'</div></div><div style="text-align:center;padding:0 16px"><div class="scrim-score" style="color:'+rcol+'">'+(s.wins||0)+'</div><div style="font-size:11px;color:var(--muted);margin:2px 0">–</div><div class="scrim-score" style="color:var(--muted)">'+(s.losses||0)+'</div></div><div style="display:flex;flex-direction:column;gap:6px">'+eb+'</div></div>'+(s.notes?'<div class="scrim-card-body"><div style="font-size:12px;color:#94a3b8;padding-top:12px;border-left:3px solid '+rcol+';padding-left:12px">'+esc(s.notes)+'</div></div>':'')+' </div>';
+      }).join("");
+  }).join("");
+}
+function showScrimForm(){document.getElementById("scrim-form").style.display="block";document.getElementById("scrim-add-btn").style.display="none";document.getElementById("sf-title").textContent="⚔️ THÊM SCRIM";document.getElementById("sf-eid").value="";document.getElementById("sf-date").value=today();document.getElementById("sf-opp").value="";document.getElementById("sf-fmt").value="BO3";document.getElementById("sf-wk").value=wkS(0);document.getElementById("sf-w").value="";document.getElementById("sf-l").value="";document.getElementById("sf-notes").value="";}
+function cancelScrim(){document.getElementById("scrim-form").style.display="none";document.getElementById("scrim-add-btn").style.display=(CU.isCoach||CU.isManager||CU.isAssist)?"block":"none";}
+function saveScrim(){
+  const opp=document.getElementById("sf-opp").value;if(!opp){showToast("Chọn đối thủ!","#ef4444");return;}
+  const w=parseInt(document.getElementById("sf-w").value||0);const l=parseInt(document.getElementById("sf-l").value||0);
+  const result=w>l?"Win":w<l?"Loss":"Draw";
+  const eid=document.getElementById("sf-eid").value;
+  const entry={id:eid||String(Date.now()),ts:Date.now(),date:document.getElementById("sf-date").value,opponent:opp,format:document.getElementById("sf-fmt").value,week:document.getElementById("sf-wk").value,wins:w,losses:l,result,notes:document.getElementById("sf-notes").value};
+  if(eid){const i=DATA.scrims.findIndex(s=>String(s.id)===String(eid));if(i>=0)DATA.scrims[i]=entry;else DATA.scrims.unshift(entry);}
+  else DATA.scrims.unshift(entry);
+  dSave("scrims",DATA.scrims,300);cancelScrim();renderScrim();updateHdrStats();showToast("💾 Đã lưu scrim!");
+}
+function editScrim(id){
+  const s=DATA.scrims.find(x=>String(x.id)===String(id));if(!s)return;
+  document.getElementById("scrim-form").style.display="block";document.getElementById("scrim-add-btn").style.display="none";
+  document.getElementById("sf-title").textContent="✏️ SỬA SCRIM";document.getElementById("sf-eid").value=String(s.id);
+  document.getElementById("sf-date").value=s.date;setTimeout(()=>document.getElementById("sf-opp").value=s.opponent,50);
+  document.getElementById("sf-fmt").value=s.format||"BO3";document.getElementById("sf-wk").value=s.week||wkS(0);
+  document.getElementById("sf-w").value=s.wins||"";document.getElementById("sf-l").value=s.losses||"";document.getElementById("sf-notes").value=s.notes||"";
+}
+function delScrim(id){if(!confirm("Xóa scrim này?"))return;DATA.scrims=DATA.scrims.filter(s=>String(s.id)!==String(id));dSave("scrims",DATA.scrims,300);renderScrim();updateHdrStats();}
+
+// ══════════════════════════════════════════════════
+// PDF EXPORT
+// ══════════════════════════════════════════════════
+function exportPDF(){
+  const wk=wkS(0);const td=today();
+  document.getElementById("pdf-week-label").textContent="Tuần "+wkL(wk)+" · Xuất ngày "+td;
+  const thisW=DATA.scrims.filter(s=>s.week===wk);
+  const tW=thisW.filter(s=>s.result==="Win").length;
+  const tWR=thisW.length?Math.round(tW/thisW.length*100):0;
+  const wDays=Array.from({length:7},(_,i)=>{const d=new Date(wk);d.setDate(d.getDate()+i);return d.toISOString().slice(0,10);});
+  let html='';
+  html+='<div style="margin-bottom:20px"><div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#C8A94A;border-bottom:1px solid #1A2E48;padding-bottom:6px">📋 ĐIỂM DANH TUẦN</div>';
+  html+=PIDS.map(pid=>{const p=pInfo(pid);const pres=wDays.filter(d=>{const r=DATA.attendance[d+"_"+pid];return r&&r.status!=="absent";}).length;const tot=wDays.filter(d=>d<=td).length||1;const pct=Math.round(pres/tot*100);return'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span>'+p.avatar+'</span><div style="flex:1">'+p.name+'</div><div style="font-weight:700;color:'+(pct>=80?"#22c55e":pct>=60?"#C8A94A":"#ef4444")+'">'+pres+"/"+tot+" ("+pct+"%)</div></div>";}).join("")+'</div>';
+  html+='<div style="margin-bottom:20px"><div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#C8A94A;border-bottom:1px solid #1A2E48;padding-bottom:6px">⚔️ KẾT QUẢ SCRIM TUẦN ('+tWR+"% thắng)</div>";
+  if(!thisW.length)html+='<div style="color:#3D5470;font-size:12px">Chưa có scrim tuần này.</div>';
+  else html+=thisW.map(s=>'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="flex:1">'+esc(s.opponent)+' ('+s.format+')</div><div style="font-weight:900;color:'+rc(s.result)+'">'+(s.wins||0)+' – '+(s.losses||0)+' '+s.result+'</div></div>').join("");
+  html+='</div>';
+  const perfWk=DATA.performance[wk]||{};
+  html+='<div><div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#C8A94A;border-bottom:1px solid #1A2E48;padding-bottom:6px">⭐ ĐÁNH GIÁ HIỆU SUẤT</div>';
+  html+=PIDS.map(pid=>{const p=pInfo(pid);const pd=perfWk[pid]||{};const sc=[pd.mechanics,pd.macro,pd.mental].filter(Boolean).map(Number);const avg=sc.length===3?Math.round(sc.reduce((a,b)=>a+b,0)/3*10)/10:"—";return'<div style="margin-bottom:10px"><div style="font-weight:700">'+p.avatar+' '+p.name+'</div><div style="display:flex;gap:16px;font-size:12px;color:#3D5470"><span>Mechanics: <strong>'+(pd.mechanics||"—")+'</strong></span><span>Macro: <strong>'+(pd.macro||"—")+'</strong></span><span>Mental: <strong>'+(pd.mental||"—")+'</strong></span><span style="color:#C8A94A;font-weight:700">TB: '+avg+'</span></div>'+(pd.comment?'<div style="font-size:11px;color:#64748b;margin-top:2px">Coach: '+esc(pd.comment)+'</div>':"")+' </div>';}).join("")+'</div>';
+  document.getElementById("pdf-body").innerHTML=html;
+  openModal("pdf-modal");
+}
+
+// ══════════════════════════════════════════════════
+// PERFORMANCE
+// ══════════════════════════════════════════════════
+function renderPerf(){
+  const vw=wkS(perfOff);document.getElementById("perf-wk").textContent="⭐ Đánh giá — "+wkL(vw);
+  const isCoach=CU.isCoach||CU.isManager;const data=DATA.performance[vw]||{};
+  const showP=isCoach?PIDS:PIDS.filter(pid=>pid===CID);
+  document.getElementById("perf-list").innerHTML=showP.map(pid=>{
+    const p=pInfo(pid);const pd=data[pid]||{};
+    const sc=[pd.mechanics,pd.macro,pd.mental].filter(Boolean).map(Number);
+    const avg=sc.length===3?Math.round(sc.reduce((a,b)=>a+b,0)/3*10)/10:null;
+    const avgC=avg>=7?"#22c55e":avg>=5?"#C8A94A":"#ef4444";
+    const boxes=["mechanics","macro","mental"].map((key,ki)=>{
+      const labels=["⚙️ Mechanics","🗺️ Macro","🧠 Mental"];
+      const cnt=isCoach?'<div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap">'+[1,2,3,4,5,6,7,8,9,10].map(n=>{const act=pd[key]===n;return'<button onclick="savePerfF(\''+pid+'\',\''+key+'\','+n+')" style="width:24px;height:24px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid '+(act?"var(--gold)":"var(--bdr)")+';background:'+(act?"#C8A94A44":"transparent")+';color:'+(act?"var(--gold)":"var(--muted)")+'">'+n+'</button>';}).join("")+'</div>':'<div style="font-size:32px;font-weight:900;color:'+(pd[key]>=7?"#22c55e":pd[key]>=5?"#C8A94A":pd[key]?"#ef4444":"var(--muted)")+'">'+(pd[key]||"—")+'</div>';
+      return'<div style="background:var(--mid);border-radius:9px;padding:12px 10px;text-align:center"><div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+labels[ki]+'</div>'+cnt+'</div>';
+    }).join("");
+    const comment=isCoach?'<textarea onchange="savePerfF(\''+pid+'\',\'comment\',this.value)" placeholder="Nhận xét tuần này..." style="background:#030709;border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:8px 12px;font-size:13px;width:100%;font-family:inherit;outline:none;min-height:55px;resize:vertical">'+esc(pd.comment||"")+'</textarea>':'<div style="background:var(--mid);border-radius:8px;padding:10px 12px;font-size:13px;color:'+(pd.comment?"var(--txt)":"var(--muted)")+';border-left:3px solid var(--gold);min-height:40px">'+(esc(pd.comment)||"Chưa có nhận xét")+'</div>';
+    const selfR=(!isCoach&&CID===pid)?'<textarea onchange="savePerfF(\''+pid+'\',\'selfReview\',this.value)" placeholder="1 điều làm tốt + 1 điều cần cải thiện..." style="background:#030709;border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:8px 12px;font-size:13px;width:100%;font-family:inherit;outline:none;min-height:55px;resize:vertical">'+esc(pd.selfReview||"")+'</textarea>':'<div style="background:var(--mid);border-radius:8px;padding:10px 12px;font-size:13px;color:'+(pd.selfReview?"var(--txt)":"var(--muted)")+';border-left:3px solid #3b82f6;min-height:40px">'+(esc(pd.selfReview)||"Chưa có")+'</div>';
+    return'<div class="card"><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap"><span style="font-size:26px">'+p.avatar+'</span><div style="flex:1"><div style="font-weight:800">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--muted)">'+p.pos+'</div></div>'+(avg?'<div style="text-align:right"><div style="font-size:24px;font-weight:900;color:'+avgC+'">'+avg+'</div><div style="font-size:9px;color:var(--muted)">TB</div></div>':"")+' </div><div class="g3" style="margin-bottom:14px">'+boxes+'</div><div style="margin-bottom:10px"><label class="lbl">NHẬN XÉT TỪ COACH</label>'+comment+'</div><div><label class="lbl">'+(isCoach?"TỰ NHẬN XÉT":"✍️ TỰ NHẬN XÉT CỦA BẠN")+'</label>'+selfR+'</div></div>';
+  }).join("");
+}
+function savePerfF(pid,field,val){const vw=wkS(perfOff);if(!DATA.performance[vw])DATA.performance[vw]={};if(!DATA.performance[vw][pid])DATA.performance[vw][pid]={};DATA.performance[vw][pid][field]=val;dSave("performance",DATA.performance,1500);if(["mechanics","macro","mental"].includes(field))setTimeout(renderPerf,50);}
+function perfNav(dir){perfOff+=dir;renderPerf();}
+
+// ══════════════════════════════════════════════════
+// HERO STATS
+// ══════════════════════════════════════════════════
+function renderHeroStats(){
+  const isCoach=CU.isCoach||CU.isManager;
+  const pSel=document.getElementById("hero-filter-player");
+  if(pSel&&pSel.options.length===1){PIDS.forEach(pid=>{const p=pInfo(pid);const o=document.createElement("option");o.value=pid;o.textContent=p.avatar+" "+p.name;pSel.appendChild(o);});}
+  const filterPid=document.getElementById("hero-filter-player")?.value||"all";
+  const sortBy=document.getElementById("hero-sort")?.value||"games";
+  const heroData={};
+  Object.entries(DATA.weekTasks).forEach(([wk,players])=>{Object.entries(players).forEach(([pid,tasks])=>{if(filterPid!=="all"&&pid!==filterPid)return;Object.entries(tasks).forEach(([taskIdx,t])=>{if(!t.hero)return;const h=t.hero;if(!heroData[h])heroData[h]={hero:h,totalGames:0,totalRequired:0,sessions:0,players:new Set(),completed:0,refs:[]};heroData[h].totalGames+=parseInt(t.played||0);heroData[h].totalRequired+=parseInt(t.required||0);heroData[h].sessions++;heroData[h].players.add(pid);if(parseInt(t.played||0)>=parseInt(t.required||1))heroData[h].completed++;heroData[h].refs.push({wk,pid,taskIdx});});});});
+  let heroes=Object.values(heroData).map(h=>({...h,players:h.players.size}));
+  if(sortBy==="games")heroes.sort((a,b)=>b.totalGames-a.totalGames);else if(sortBy==="hero")heroes.sort((a,b)=>a.hero.localeCompare(b.hero,"vi"));else heroes.sort((a,b)=>b.completed-a.completed);
+  const maxGames=heroes[0]?.totalGames||1;
+  const hsl=document.getElementById("hero-stats-list");
+  if(!heroes.length){hsl.innerHTML='<div class="empty" style="padding:20px 0">Chưa có dữ liệu. Thêm lịch tập tướng trước nhé!</div>';return;}
+  hsl.innerHTML=heroes.slice(0,30).map((h,i)=>{const pct=Math.round(h.totalGames/maxGames*100);const cRate=h.sessions>0?Math.round(h.completed/h.sessions*100):0;return'<div class="hero-stat-row"><div style="width:22px;text-align:right;font-size:11px;color:var(--muted);font-weight:700">#'+(i+1)+'</div><div style="width:110px;font-size:13px;font-weight:700">'+esc(h.hero)+'</div><div class="hero-stat-bar"><div class="hero-stat-fill" style="width:'+pct+'%;background:linear-gradient(90deg,#C8A94A,#e0b84a)"></div></div><div style="font-size:11px;color:var(--gold);font-weight:700;width:44px;text-align:right">'+h.totalGames+'g</div><div style="font-size:10px;color:var(--green);width:36px;text-align:center">'+cRate+'%✓</div><div style="font-size:10px;color:var(--muted);width:24px;text-align:center">'+h.players+'👤</div></div>';}).join("");
+  // Per-player detail table - linked to weekTasks, editable
+  const poolEl=document.getElementById("player-hero-pools");
+  const vw=wkS(0);
+  const showPids=filterPid==="all"?PIDS:[filterPid];
+  poolEl.innerHTML=showPids.map(pid=>{
+    const p=pInfo(pid);
+    const tasks=DATA.weekTasks[vw]?.[pid]||{};
+    const list=Object.entries(tasks).filter(([,t])=>t.hero);
+    return'<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:24px">'+p.avatar+'</span><div style="flex:1"><div style="font-weight:800;font-size:14px">'+esc(p.name)+'</div><div style="font-size:10px;color:var(--muted)">'+p.pos+' · Tuần này</div></div></div>'
+    +(list.length===0?'<div style="font-size:12px;color:var(--muted);text-align:center;padding:12px">Chưa có tướng nào tuần này</div>'
+    :'<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="text-align:left;padding:6px 8px;color:var(--muted);font-size:10px">TƯỚNG</th><th style="color:var(--muted);font-size:10px">YÊU CẦU</th><th style="color:var(--muted);font-size:10px">ĐÃ CHƠI</th><th style="color:var(--muted);font-size:10px">TRẠNG THÁI</th></tr></thead><tbody>'
+    +list.map(([taskIdx,t])=>{
+      const isDone=parseInt(t.played||0)>=parseInt(t.required||1);
+      const playedCell=isCoach
+        ?'<input type="number" min="0" max="99" value="'+esc(t.played||"0")+'" onchange="updateHeroPlayed(\''+pid+'\',\''+taskIdx+'\',this.value)" style="width:52px;background:#030709;border:1px solid var(--bdr);border-radius:5px;color:var(--txt);padding:4px;text-align:center;font-size:12px;font-family:inherit">'
+        :'<span style="font-weight:700;color:'+(isDone?"var(--green)":"var(--txt)")+'">'+( t.played||"0")+'</span>';
+      const reqCell=isCoach
+        ?'<input type="number" min="1" max="99" value="'+esc(t.required||"")+'" onchange="updateHeroRequired(\''+pid+'\',\''+taskIdx+'\',this.value)" style="width:52px;background:#030709;border:1px solid var(--bdr);border-radius:5px;color:var(--txt);padding:4px;text-align:center;font-size:12px;font-family:inherit">'
+        :'<span>'+( t.required||"?")+'</span>';
+      return'<tr style="border-top:1px solid var(--bdr)"><td style="padding:6px 8px;font-weight:700">'+esc(t.hero)+'</td><td style="text-align:center">'+reqCell+'</td><td style="text-align:center">'+playedCell+'</td><td style="text-align:center">'+(isDone?'<span style="color:var(--green);font-size:13px">✅</span>':'<span style="color:var(--muted);font-size:13px">⬜</span>')+'</td></tr>';
+    }).join("")+'</tbody></table>')+'</div>';
+  }).join("");
+}
+function updateHeroPlayed(pid,taskIdx,val){
+  const vw=wkS(0);
+  if(!DATA.weekTasks[vw]||!DATA.weekTasks[vw][pid]||!DATA.weekTasks[vw][pid][taskIdx])return;
+  DATA.weekTasks[vw][pid][taskIdx].played=val;
+  dSaveNow("weekTasks",DATA.weekTasks);
+  setTimeout(renderHeroStats,300);
+}
+function updateHeroRequired(pid,taskIdx,val){
+  const vw=wkS(0);
+  if(!DATA.weekTasks[vw]||!DATA.weekTasks[vw][pid]||!DATA.weekTasks[vw][pid][taskIdx])return;
+  DATA.weekTasks[vw][pid][taskIdx].required=val;
+  dSaveNow("weekTasks",DATA.weekTasks);
+  setTimeout(renderHeroStats,300);
+}
+}
+
+// ══════════════════════════════════════════════════
+// ACCOUNT
+// ══════════════════════════════════════════════════
+function renderAccount(){
+  document.getElementById("acc-info").innerHTML='<div style="display:flex;align-items:center;gap:14px;background:var(--mid);border-radius:10px;padding:16px"><span style="font-size:36px">'+CU.avatar+'</span><div><div style="font-size:18px;font-weight:900">'+esc(CU.name)+'</div><div style="font-size:12px;color:var(--muted);margin-top:2px">'+esc(CU.pos)+'</div><div style="font-size:11px;color:var(--muted);margin-top:4px">ID: '+CID+'</div></div></div>';
+}
+function changePassword(){
+  const oldP=document.getElementById("pw-old").value;const newP=document.getElementById("pw-new").value;const confP=document.getElementById("pw-conf").value;const errEl=document.getElementById("pw-err");
+  if(!oldP||oldP!==CFG.passes[CID]){errEl.textContent="Mật khẩu hiện tại không đúng!";errEl.style.display="block";return;}
+  if(!newP||newP.length<4){errEl.textContent="Mật khẩu mới phải có ít nhất 4 ký tự!";errEl.style.display="block";return;}
+  if(newP!==confP){errEl.textContent="Mật khẩu xác nhận không khớp!";errEl.style.display="block";return;}
+  CFG.passes[CID]=newP;errEl.style.display="none";dSave("config",CFG,300);
+  document.getElementById("pw-old").value="";document.getElementById("pw-new").value="";document.getElementById("pw-conf").value="";
+  showToast("✅ Đổi mật khẩu thành công!");
+}
+
+// ══════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════
+function renderSettings(){
+  document.getElementById("player-editor").innerHTML='<div style="background:var(--mid);border-radius:10px;padding:16px;margin-bottom:12px">'+PIDS.map(pid=>{const p=pInfo(pid);return'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="text-align:center;min-width:52px"><div style="font-size:26px;line-height:1.2">'+p.avatar+'</div><label class="lbl" style="margin-top:3px">ICON</label><input id="pe-av-'+pid+'" value="'+esc(p.avatar)+'" placeholder="🎮" style="text-align:center;font-size:16px;padding:3px 4px;width:52px"></div><div style="flex:1"><label class="lbl">'+pid.toUpperCase()+' — TÊN</label><input id="pe-name-'+pid+'" value="'+esc(p.name)+'" placeholder="Tên tuyển thủ..."></div><div style="width:120px"><label class="lbl">VỊ TRÍ</label><input id="pe-pos-'+pid+'" value="'+esc(p.pos)+'" placeholder="VD: Rừng"></div></div>';}).join("")+'</div><div style="font-size:11px;color:var(--muted);margin-bottom:10px">💡 Copy emoji bất kỳ rồi dán vào ô ICON là được</div><button class="btn btn-gf" onclick="saveAllPlayers()">💾 LƯU</button>';
+  var ci=document.getElementById("cfg-checkin");if(ci)ci.value=CFG.checkinTime||"08:30";
+  document.getElementById("cfg-event").value=CFG.eventName||"APL 2026";
+  document.getElementById("cfg-date").value=CFG.eventDate||"2026-06-15";
+  document.getElementById("opp-editor").innerHTML=(CFG.opponents||DEF_OPPS).map((o,i)=>'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><input value="'+esc(o)+'" onchange="updateOpp('+i+',this.value)" style="flex:1"><button class="btn btn-red btn-sm" onclick="removeOpp('+i+')">🗑</button></div>').join("");
+  const heroes=CFG.heroes||DEF_HEROES;
+  document.getElementById("hero-editor").innerHTML=heroes.map((h,i)=>'<div style="display:flex;align-items:center;gap:4px;background:var(--mid);border:1px solid var(--bdr);border-radius:6px;padding:4px 8px"><span style="font-size:12px;cursor:pointer" onclick="openHeroListEdit('+i+',\''+esc(h)+'\')">'+esc(h)+' ✏️</span><button onclick="removeHero('+i+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0;margin-left:2px">✕</button></div>').join("");
+  const allIds=["p1","p2","p3","p4","p5","assist","manager","supv"];
+  const labels={p1:"Player 1",p2:"Player 2",p3:"Player 3",p4:"Player 4",p5:"Player 5",assist:"Trợ Lý",manager:"Quản Lý",supv:"Supv"};
+  document.getElementById("pass-editor").innerHTML=allIds.map(id=>'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="width:80px;font-size:12px;font-weight:700">'+labels[id]+'</div><div style="flex:1;position:relative"><input type="password" id="pw-field-'+id+'" placeholder="Nhập mật khẩu mới..." style="width:100%;background:#030709;border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:8px 36px 8px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box"><button onclick="togglePwF(\''+id+'\')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px" id="pe-'+id+'">👁️</button></div><button class="btn btn-gold btn-sm" onclick="resetPass(\''+id+'\')">Lưu</button></div>').join("");
+}
+function saveConfig(){CFG.eventName=document.getElementById("cfg-event").value||"APL 2026";CFG.eventDate=document.getElementById("cfg-date").value||"2026-06-15";dbSet("config",CFG);document.getElementById("hdr-event").textContent=CFG.eventName;renderDashboard();showToast("✅ Đã lưu cài đặt!");}
+function saveCfg(){CFG.checkinTime=document.getElementById("cfg-checkin").value||"08:30";dSave("config",CFG,500);showToast("✅ Đã lưu giờ điểm danh!");}
+function saveAllPlayers(){
+  if(!CFG.players)CFG.players={};
+  PIDS.forEach(function(pid){
+    const nameEl=document.getElementById("pe-name-"+pid);const posEl=document.getElementById("pe-pos-"+pid);const avEl=document.getElementById("pe-av-"+pid);
+    if(!CFG.players[pid])CFG.players[pid]=Object.assign({},DEF_PLAYERS[pid]||{});
+    if(nameEl&&nameEl.value.trim())CFG.players[pid].name=nameEl.value.trim();
+    if(posEl&&posEl.value.trim())CFG.players[pid].pos=posEl.value.trim();
+    if(avEl&&avEl.value.trim())CFG.players[pid].avatar=avEl.value.trim();
+  });
+  dSaveNow("config",CFG);buildLoginDropdown();showToast("✅ Đã lưu tên tuyển thủ!");
+}
+function updateOpp(i,val){if(!CFG.opponents)CFG.opponents=[...DEF_OPPS];CFG.opponents[i]=val;dSave("config",CFG,1000);}
+function removeOpp(i){if(!CFG.opponents)CFG.opponents=[...DEF_OPPS];CFG.opponents.splice(i,1);dSave("config",CFG,500);renderSettings();}
+function addOpp(){const v=document.getElementById("new-opp").value.trim();if(!v)return;if(!CFG.opponents)CFG.opponents=[...DEF_OPPS];CFG.opponents.push(v);dSave("config",CFG,500);document.getElementById("new-opp").value="";renderSettings();}
+function openHeroListEdit(i,cur){openModal("hero-modal");document.getElementById("hm-meta").value=JSON.stringify({type:"list",i});document.getElementById("hm-inp").value=cur;}
+function removeHero(i){if(!CFG.heroes)CFG.heroes=[...DEF_HEROES];CFG.heroes.splice(i,1);dSave("config",CFG,500);renderSettings();}
+function addHero(){const v=document.getElementById("new-hero").value.trim();if(!v)return;if(!CFG.heroes)CFG.heroes=[...DEF_HEROES];CFG.heroes.push(v);dSave("config",CFG,500);document.getElementById("new-hero").value="";renderSettings();}
+function togglePwF(id){const inp=document.getElementById("pw-field-"+id);const eye=document.getElementById("pe-"+id);if(!inp)return;inp.type=inp.type==="password"?"text":"password";eye.textContent=inp.type==="password"?"👁️":"🙈";}
+function resetPass(id){const inp=document.getElementById("pw-field-"+id);if(!inp||!inp.value.trim()){showToast("Nhập mật khẩu mới trước!","#ef4444");return;}if(inp.value.length<4){showToast("Phải có ít nhất 4 ký tự!","#ef4444");return;}if(!CFG.passes)CFG.passes={};CFG.passes[id]=inp.value.trim();dSave("config",CFG,300);inp.value="";inp.type="password";document.getElementById("pe-"+id).textContent="👁️";showToast("🔐 Đã reset mật khẩu!");}
+
+// ══════════════════════════════════════════════════
+// OPPONENTS
+// ══════════════════════════════════════════════════
+function renderOpponents(){
+  var isCoach=CU.isCoach||CU.isManager;
+  var opps=(CFG.opponents||DEF_OPPS).filter(function(o){return o!=="Đội khác";});
+  var el=document.getElementById("opp-list");if(!el)return;
+  var html="";
+  opps.forEach(function(opp){
+    var matches=DATA.scrims.filter(function(s){return s.opponent===opp;});
+    var wins=matches.filter(function(s){return s.result==="Win";}).length;
+    var losses=matches.filter(function(s){return s.result==="Loss";}).length;
+    var wr=matches.length?Math.round(wins/matches.length*100):null;
+    var wrc=wr>=60?"#22c55e":wr>=40?"#C8A94A":"#ef4444";
+    var note=(DATA.oppNotes&&DATA.oppNotes[opp])||{};
+    html+='<div style="background:var(--mid);border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid '+(wr!==null?wrc:"var(--bdr)")+'"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="flex:1"><div style="font-weight:800;font-size:15px">'+esc(opp)+'</div><div style="font-size:11px;color:var(--muted)">'+(matches.length?wins+"W - "+losses+"L / "+matches.length+" trận":"Chưa có scrim")+'</div></div>'+(wr!==null?'<div style="text-align:center"><div style="font-size:22px;font-weight:900;color:'+wrc+'">'+wr+'%</div><div style="font-size:9px;color:var(--muted)">WIN RATE</div></div>':"")+'</div>';
+    if(matches.length)html+='<div style="margin-bottom:10px"><div style="height:6px;background:var(--bdr);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+wr+'%;background:'+wrc+';border-radius:3px"></div></div></div>';
+    html+='<div><div style="font-size:10px;color:var(--gold);font-weight:700;margin-bottom:6px">📋 GHI CHÚ BP</div>';
+    if(isCoach)html+='<textarea data-opp="'+esc(opp)+'" onblur="saveOppNoteEl(this)" placeholder="BP ưa thích, điểm yếu, cách counter..." style="background:#030709;border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:8px;font-size:12px;width:100%;font-family:inherit;outline:none;min-height:70px;resize:vertical;box-sizing:border-box">'+esc(note.bp||"")+'</textarea>';
+    else html+='<div style="background:#030709;border-radius:7px;padding:8px;font-size:12px;min-height:40px;color:'+(note.bp?"var(--txt)":"var(--muted)")+'">'+esc(note.bp||"Chưa có ghi chú")+'</div>';
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+  var chart=document.getElementById("opp-chart");if(!chart)return;
+  var hasData=opps.some(function(o){return DATA.scrims.some(function(s){return s.opponent===o;});});
+  if(!hasData){chart.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Chưa có dữ liệu scrim</div>';return;}
+  chart.innerHTML=opps.filter(function(o){return DATA.scrims.some(function(s){return s.opponent===o;});}).map(function(opp){
+    var m=DATA.scrims.filter(function(s){return s.opponent===opp;});var w=m.filter(function(s){return s.result==="Win";}).length;var wr2=Math.round(w/m.length*100);var c=wr2>=60?"#22c55e":wr2>=40?"#C8A94A":"#ef4444";
+    return'<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px">'+esc(opp)+'</span><span style="font-size:12px;font-weight:700;color:'+c+'">'+wr2+'%</span></div><div style="height:8px;background:var(--bdr);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+wr2+'%;background:'+c+';border-radius:4px"></div></div></div>';
+  }).join("");
+}
+function saveOppNoteEl(el){var opp=el.getAttribute("data-opp");if(!DATA.oppNotes)DATA.oppNotes={};if(!DATA.oppNotes[opp])DATA.oppNotes[opp]={};DATA.oppNotes[opp].bp=el.value;dSave("oppNotes",DATA.oppNotes,1500);}
+
+// ══════════════════════════════════════════════════
+// RANKING
+// ══════════════════════════════════════════════════
+var rankTab="attendance";
+function setRankTab(tab,btn){rankTab=tab;document.querySelectorAll("[id^='rt-']").forEach(function(b){b.className="btn btn-gray btn-sm";});if(btn)btn.className="btn btn-gold btn-sm";renderRanking();}
+function renderRanking(){
+  var pids=["p1","p2","p3","p4","p5"];var wk=wkS(0);var td=today();
+  var wDays=Array.from({length:7},function(_,i){var d=new Date(wk);d.setDate(d.getDate()+i);return d.toISOString().slice(0,10);});
+  var ranked=pids.map(function(pid){
+    var p=pInfo(pid);
+    var pres=wDays.filter(function(d){var r=DATA.attendance[d+"_"+pid];return d<=td&&r&&r.status!=="absent";}).length;
+    var cnt=wDays.filter(function(d){return d<=td;}).length||1;
+    var attPct=Math.round(pres/cnt*100);
+    var tasks=(DATA.weekTasks[wk]||{})[pid]||{};var taskList=Object.values(tasks);
+    var done=taskList.filter(function(t){return t.hero&&parseInt(t.played||0)>=parseInt(t.required||1);}).length;
+    var total=taskList.filter(function(t){return t.hero;}).length||1;
+    var trainPct=Math.round(done/total*100);
+    var pd2=(DATA.performance[wk]||{})[pid]||{};
+    var sc2=[pd2.mechanics,pd2.macro,pd2.mental].filter(Boolean).map(Number);
+    var perfAvg=sc2.length===3?Math.round(sc2.reduce(function(a,b){return a+b;},0)/3*10)/10:0;
+    return{pid,p,attPct,trainPct,perfAvg,streak:getStreak(pid)};
+  });
+  if(rankTab==="attendance")ranked.sort(function(a,b){return b.attPct-a.attPct||b.streak-a.streak;});
+  else if(rankTab==="training")ranked.sort(function(a,b){return b.trainPct-a.trainPct;});
+  else ranked.sort(function(a,b){return b.perfAvg-a.perfAvg;});
+  var medals=["🥇","🥈","🥉"];
+  var el=document.getElementById("ranking-list");if(!el)return;
+  el.innerHTML=ranked.map(function(r,i){
+    var val=rankTab==="attendance"?r.attPct+"%":rankTab==="training"?r.trainPct+"%":(r.perfAvg||"—");
+    var c=i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":"var(--muted)";
+    return'<div style="display:flex;align-items:center;gap:12px;background:var(--mid);border-radius:10px;padding:12px 14px;margin-bottom:8px;'+(i===0?"border:1px solid #FFD70044;":"")+'"><div style="font-size:'+(i<3?22:16)+'px;min-width:30px;text-align:center">'+(medals[i]||"#"+(i+1))+'</div><span style="font-size:22px">'+r.p.avatar+'</span><div style="flex:1"><div style="font-weight:800;font-size:14px">'+esc(r.p.name)+'</div><div style="font-size:10px;color:var(--muted)">'+r.p.pos+'</div></div><div style="text-align:right"><div style="font-size:20px;font-weight:900;color:'+c+'">'+val+'</div><div style="font-size:9px;color:var(--muted)">'+(rankTab==="attendance"?"streak: "+r.streak+"🔥":rankTab==="training"?"hoàn thành":"điểm TB")+'</div></div></div>';
+  }).join("");
+}
+
+// Warn before leaving if saves pending
+window.addEventListener("beforeunload", function(e){
+  if(Object.keys(saveQ).length>0){
+    e.preventDefault();
+    e.returnValue="Có dữ liệu chưa lưu xong. Bạn có chắc muốn thoát?";
+    return e.returnValue;
+  }
+});
+
+// Close modal on backdrop click
+document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");}));
+
+</script>
+</body></html>
