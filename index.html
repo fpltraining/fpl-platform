@@ -907,11 +907,11 @@ function renderSchedule(){
         html+='<option value="meeting">💬 Họp</option>';
         html+='<option value="rest">😴 Nghỉ</option>';
         html+='</select></td>';
-        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Đội 1..." onblur="quickSaveCell(\''+ds+'\',\'team1\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
-        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Đội 2..." onblur="quickSaveCell(\''+ds+'\',\'team2\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
-        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Đội 3..." onblur="quickSaveCell(\''+ds+'\',\'team3\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
-        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input type="time" onblur="quickSaveCell(\''+ds+'\',\'time\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
-        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Ghi chú..." onblur="quickSaveCell(\''+ds+'\',\'note\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Đội 1..." oninput="dQuickSave(\''+ds+'\',\'team1\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Đội 2..." oninput="dQuickSave(\''+ds+'\',\'team2\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Đội 3..." oninput="dQuickSave(\''+ds+'\',\'team3\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input type="time" oninput="dQuickSave(\''+ds+'\',\'time\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Ghi chú..." oninput="dQuickSave(\''+ds+'\',\'note\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
         html+='<td style="padding:4px;border:1px solid var(--bdr);text-align:center"></td>';
       } else {
         html+='<td colspan="7" style="padding:7px 10px;border:1px solid var(--bdr);color:#3D547055;font-size:11px;font-style:italic">—</td>';
@@ -947,11 +947,11 @@ function renderSchedule(){
 
         // Teams
         if(canEdit){
-          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t1)+'" onblur="updateEventTeam(\''+ev.id+'\',0,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:var(--txt);font-size:12px;font-weight:700;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
-          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t2)+'" onblur="updateEventTeam(\''+ev.id+'\',1,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:var(--txt);font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
-          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t3)+'" onblur="updateEventTeam(\''+ev.id+'\',2,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:var(--txt);font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
-          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input type="time" value="'+esc(ev.time||'')+'" onblur="updateEventField(\''+ev.id+'\',\'time\',this.value)" style="background:transparent;border:none;color:var(--gold);font-size:11px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
-          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(ev.note||'')+'" onblur="updateEventField(\''+ev.id+'\',\'note\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t1)+'" oninput="dUpdateTeam(\''+ev.id+'\',0,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:var(--txt);font-size:12px;font-weight:700;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t2)+'" oninput="dUpdateTeam(\''+ev.id+'\',1,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:var(--txt);font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t3)+'" oninput="dUpdateTeam(\''+ev.id+'\',2,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:var(--txt);font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input type="time" value="'+esc(ev.time||'')+'" oninput="dUpdateField(\''+ev.id+'\',\'time\',this.value)" style="background:transparent;border:none;color:var(--gold);font-size:11px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(ev.note||'')+'" oninput="dUpdateField(\''+ev.id+'\',\'note\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
           html+='<td style="padding:4px;border:1px solid var(--bdr);text-align:center"><button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button></td>';
         } else {
           html+='<td style="padding:7px 10px;border:1px solid var(--bdr);font-weight:700">'+esc(t1)+'</td>';
@@ -1378,14 +1378,22 @@ function renderRanking(){
   }).join("");
 }
 
-// Warn before leaving if saves pending
-window.addEventListener("beforeunload", function(e){
-  if(Object.keys(saveQ).length>0){
-    e.preventDefault();
-    e.returnValue="Có dữ liệu chưa lưu xong. Bạn có chắc muốn thoát?";
-    return e.returnValue;
-  }
-});
+// Debounced wrappers for inline sheet editing
+var _dq={};
+function dQuickSave(date,field,val){
+  clearTimeout(_dq[date+field]);
+  _dq[date+field]=setTimeout(function(){quickSaveCell(date,field,val);},800);
+}
+var _df={};
+function dUpdateField(id,field,val){
+  clearTimeout(_df[id+field]);
+  _df[id+field]=setTimeout(function(){updateEventField(id,field,val);},800);
+}
+var _dt={};
+function dUpdateTeam(id,teamIdx,val,currentName){
+  clearTimeout(_dt[id+String(teamIdx)]);
+  _dt[id+String(teamIdx)]=setTimeout(function(){updateEventTeam(id,teamIdx,val,currentName);},800);
+}
 
 // Close modal on backdrop click
 document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");}));
