@@ -248,44 +248,32 @@ th{color:var(--muted);font-size:10px;font-weight:700}
   </div>
 
   <div id="page-schedule" class="page">
-    <div style="margin-bottom:16px">
-      <div class="card">
-        <div class="flex" style="justify-content:space-between;margin-bottom:14px">
-          <div class="ct" style="margin:0" id="cal-title">THÁNG</div>
-          <div class="flex">
-            <button class="btn btn-gray btn-sm" onclick="calNav(-1)">◀</button>
-            <button class="btn btn-gold btn-sm" onclick="calToday()">Hôm nay</button>
-            <button class="btn btn-gray btn-sm" onclick="calNav(1)">▶</button>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px">
-          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T2</div>
-          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T3</div>
-          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T4</div>
-          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T5</div>
-          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T6</div>
-          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">T7</div>
-          <div style="text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px">CN</div>
-        </div>
-        <div id="cal-grid" class="cal-grid"></div>
-        <div class="flex" style="margin-top:12px;flex-wrap:wrap;gap:8px">
-          <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div><span style="font-size:10px;color:var(--muted)">Scrim</span></div>
-          <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div><span style="font-size:10px;color:var(--muted)">Thi đấu</span></div>
-          <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--orange)"></div><span style="font-size:10px;color:var(--muted)">Tập luyện</span></div>
-          <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple)"></div><span style="font-size:10px;color:var(--muted)">Họp</span></div>
-        </div>
+    <!-- Week nav -->
+    <div class="flex" style="justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="flex" style="gap:8px">
+        <button class="btn btn-gray btn-sm" onclick="schedNav(-1)">◀</button>
+        <span id="sched-week-label" style="font-size:13px;font-weight:700;color:var(--gold);min-width:160px;text-align:center"></span>
+        <button class="btn btn-gray btn-sm" onclick="schedNav(1)">▶</button>
+        <button class="btn btn-gold btn-sm" onclick="schedWeekOff=0;renderSchedule()">Hôm nay</button>
       </div>
-      <div>
-        <div class="card" id="selected-day-card">
-          <div class="ct" id="selected-day-title">CHỌN NGÀY ĐỂ XEM</div>
-          <div id="selected-day-events"><div class="empty" style="padding:20px 0;font-size:12px">Nhấn vào ngày trên lịch để xem sự kiện</div></div>
-          <div id="add-event-btn-box" style="margin-top:12px;display:none">
-            <button class="btn btn-gold" style="width:100%" onclick="openAddEvent()">+ Thêm sự kiện</button>
-          </div>
-        </div>
+      <div id="sched-add-btn" style="display:none">
+        <button class="btn btn-green btn-sm" onclick="openAddEventNoDay()">+ Thêm sự kiện</button>
       </div>
     </div>
-    <div class="card">
+    <!-- Week stats -->
+    <div class="flex" id="sched-stats" style="margin-bottom:14px;flex-wrap:wrap;gap:8px"></div>
+    <!-- Legend -->
+    <div class="flex" style="margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div><span style="font-size:10px;color:var(--muted)">Scrim</span></div>
+      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div><span style="font-size:10px;color:var(--muted)">Thi đấu</span></div>
+      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--orange)"></div><span style="font-size:10px;color:var(--muted)">Tập luyện</span></div>
+      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple)"></div><span style="font-size:10px;color:var(--muted)">Họp</span></div>
+      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold)"></div><span style="font-size:10px;color:var(--muted)">Sự kiện đặc biệt</span></div>
+    </div>
+    <!-- Timeline -->
+    <div id="sched-timeline" style="position:relative;padding-left:22px;border-left:2px solid var(--bdr)"></div>
+    <!-- Upcoming -->
+    <div class="card" style="margin-top:16px">
       <div class="ct">📋 SỰ KIỆN SẮP TỚI</div>
       <div id="upcoming-events"></div>
     </div>
@@ -851,62 +839,132 @@ function saveHeroRename(){const meta=JSON.parse(document.getElementById("hm-meta
 // ══════════════════════════════════════════════════
 // SCHEDULE
 // ══════════════════════════════════════════════════
-function renderSchedule(){renderCalendar();renderUpcoming();}
+var schedWeekOff=0;
 
-function renderCalendar(){
-  var yr=calYear;var mo=calMonth;
-  document.getElementById("cal-title").textContent="THÁNG "+(mo+1)+"/"+yr;
-  const first=new Date(yr,mo,1);const last=new Date(yr,mo+1,0);
-  let startDay=first.getDay()-1;if(startDay<0)startDay=6;
-  const cells=[];
-  for(let i=0;i<startDay;i++){const d=new Date(yr,mo,1-startDay+i);cells.push({date:d.toISOString().slice(0,10),day:d.getDate(),other:true});}
-  for(let d=1;d<=last.getDate();d++){const dt=new Date(yr,mo,d);cells.push({date:dt.toISOString().slice(0,10),day:d,other:false});}
-  while(cells.length%7!==0){const prev=cells[cells.length-1];const d=new Date(prev.date);d.setDate(d.getDate()+1);cells.push({date:d.toISOString().slice(0,10),day:d.getDate(),other:true});}
-  const td=today();
-  document.getElementById("cal-grid").innerHTML=cells.map(function(c){
-    var evs=DATA.events.filter(function(e){return e.date===c.date;});
-    var isToday=c.date===td;var isSel=c.date===selDay;
-    var hasMatch=evs.some(function(e){return e.type==="match";});
-    var abbrs=evs.slice(0,3).map(function(ev){
-      var cc=EVENT_COLORS[ev.type]||"#3D5470";var lb="";var oppName=ev.opp||ev.name||"";
-      if(ev.type==="training")lb="🗡";else if(ev.type==="rest")lb="😴";else if(ev.type==="meeting")lb="💬";
-      else if(oppName){var ws=oppName.split(" ");lb=ws.length>=2?ws.map(function(w){return w[0]?w[0].toUpperCase():"";}).join(""):oppName.substring(0,4).toUpperCase();}
-      return lb?'<div style="font-size:8px;font-weight:700;color:'+cc+';line-height:1;text-align:center;max-width:36px;overflow:hidden">'+lb+'</div>':"";
-    }).join("");
-    return'<div class="cal-day'+(c.other?" other-month":"")+(isToday?" today":"")+(evs.length?" has-event":"")+(hasMatch?" cal-match":"")+'" style="'+(isSel?"border-color:var(--gold);background:#C8A94A33;":"")+'" onclick="selectDay(\''+c.date+'\')">'+'<span style="font-size:13px;'+(isToday?"font-weight:900;color:var(--gold)":"")+'">'+c.day+'</span>'+abbrs+'</div>';
-  }).join("");
-  var addBtnBox=document.getElementById("add-event-btn-box");
-  if(addBtnBox)addBtnBox.style.display=(CU.isCoach||CU.isManager||CU.isAssist)?"block":"none";
+function schedNav(dir){schedWeekOff+=dir;renderSchedule();}
+
+function renderSchedule(){
+  var canEdit=CU&&(CU.isCoach||CU.isManager||CU.isAssist||CU.isSupv);
+  var addBtn=document.getElementById("sched-add-btn");
+  if(addBtn)addBtn.style.display=canEdit?"block":"none";
+
+  var ws=wkS(schedWeekOff);
+  var we=new Date(ws+"T00:00:00");we.setDate(we.getDate()+6);
+  var weParts=[we.getFullYear(),String(we.getMonth()+1).padStart(2,"0"),String(we.getDate()).padStart(2,"0")].join("-");
+  var wsFmt=ws.split("-")[2]+"/"+ws.split("-")[1];
+  var weFmt=weParts.split("-")[2]+"/"+weParts.split("-")[1]+"/"+weParts.split("-")[0];
+  document.getElementById("sched-week-label").textContent=wsFmt+" – "+weFmt;
+
+  var td=today();
+  var DAY_NAMES=["CN","T2","T3","T4","T5","T6","T7"];
+  var TYPE_CFG={
+    scrim:{icon:"⚔️",color:"var(--blue)",label:"Scrim"},
+    match:{icon:"🏆",color:"var(--green)",label:"Thi đấu"},
+    training:{icon:"🗡️",color:"var(--orange)",label:"Tập luyện"},
+    meeting:{icon:"💬",color:"var(--purple)",label:"Họp đội"},
+    rest:{icon:"😴",color:"var(--muted)",label:"Nghỉ"},
+  };
+
+  // Build 7 days
+  var days=[];
+  for(var i=0;i<7;i++){var d=new Date(ws+"T00:00:00");d.setDate(d.getDate()+i);days.push(d);}
+
+  // Stats
+  var weekEvs=[];
+  days.forEach(function(d){
+    var ds=[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+    DATA.events.filter(function(e){return e.date===ds;}).forEach(function(e){weekEvs.push(e);});
+  });
+  var nScrim=weekEvs.filter(function(e){return e.type==="scrim";}).length;
+  var nMatch=weekEvs.filter(function(e){return e.type==="match";}).length;
+  var nOther=weekEvs.filter(function(e){return e.type!=="scrim"&&e.type!=="match";}).length;
+  var statsHtml="";
+  if(nScrim)statsHtml+='<div style="background:#3b82f611;border:1px solid #3b82f633;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--blue)">⚔️ '+nScrim+' scrim</div>';
+  if(nMatch)statsHtml+='<div style="background:#22c55e11;border:1px solid #22c55e33;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--green)">🏆 '+nMatch+' thi đấu</div>';
+  if(nOther)statsHtml+='<div style="background:#C8A94A11;border:1px solid #C8A94A33;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--gold)">⭐ '+nOther+' sự kiện khác</div>';
+  if(!weekEvs.length)statsHtml='<div style="font-size:12px;color:var(--muted)">Không có sự kiện tuần này</div>';
+  document.getElementById("sched-stats").innerHTML=statsHtml;
+
+  // Timeline
+  var html="";
+  days.forEach(function(d){
+    var ds=[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+    var dayEvs=DATA.events.filter(function(e){return e.date===ds;}).sort(function(a,b){return(a.time||"").localeCompare(b.time||"");});
+    var isToday=ds===td;
+    var hasEv=dayEvs.length>0;
+    var dotColor=hasEv?"var(--gold)":"var(--bdr)";
+    if(isToday)dotColor="var(--green)";
+
+    html+='<div style="position:relative;margin-bottom:16px">';
+    // Dot
+    html+='<div style="position:absolute;left:-28px;top:14px;width:10px;height:10px;border-radius:50%;background:'+dotColor+';border:2px solid '+dotColor+';'+(isToday?"box-shadow:0 0 8px #22c55e88;":"")+(hasEv&&!isToday?"box-shadow:0 0 6px #C8A94A55;":"")+'"></div>';
+    // Day header
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    html+='<span style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:2px;min-width:22px">'+DAY_NAMES[d.getDay()]+'</span>';
+    html+='<span style="font-size:18px;font-weight:900;color:'+(isToday?"var(--gold)":"var(--txt)")+'">'+d.getDate()+'/'+(d.getMonth()+1)+(isToday?' 📍':'')+'</span>';
+    if(canEdit){html+='<button onclick="openAddEventDate(\''+ds+'\')" class="btn btn-gray btn-sm" style="margin-left:auto;font-size:10px">+ Thêm</button>';}
+    html+='</div>';
+
+    if(!dayEvs.length){
+      html+='<div style="font-size:11px;color:#3D547055;padding:4px 0;font-style:italic">— Không có sự kiện</div>';
+    } else {
+      dayEvs.forEach(function(ev){
+        var cfg=TYPE_CFG[ev.type]||TYPE_CFG.scrim;
+        var bc=ev.type==="match"?"#22c55e":ev.type==="scrim"?"#3b82f6":ev.type==="meeting"?"#a855f7":ev.type==="training"?"#f97316":"#3D5470";
+        html+='<div style="background:var(--card);border:1px solid '+bc+'33;border-left:3px solid '+bc+';border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px">';
+        html+='<span style="font-size:18px;min-width:26px;text-align:center">'+cfg.icon+'</span>';
+        html+='<div style="flex:1">';
+        html+='<div style="font-weight:700;font-size:14px;color:'+bc+'">'+esc(ev.name||EVENT_LABELS[ev.type]||ev.type)+'</div>';
+        if(ev.time){html+='<div style="font-size:11px;color:var(--muted);margin-top:2px">🕐 '+ev.time+(ev.endtime?' – '+ev.endtime:'')+'</div>';}
+        if(ev.note){html+='<div style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(ev.note)+'</div>';}
+        html+='</div>';
+        if(canEdit){
+          html+='<button class="btn btn-blue btn-sm" onclick="editEvent(\''+ev.id+'\')">✏️</button>';
+          html+='<button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>';
+        }
+        html+='</div>';
+      });
+    }
+    html+='</div>';
+  });
+  document.getElementById("sched-timeline").innerHTML=html;
+  renderUpcoming();
 }
 
-function selectDay(date){
-  selDay=date;renderCalendar();
-  var evs=DATA.events.filter(function(e){return e.date===date;}).sort(function(a,b){return(a.time||"").localeCompare(b.time||"");});
-  var d=new Date(date);
-  document.getElementById("selected-day-title").textContent=d.toLocaleDateString("vi-VN",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"});
-  var canEdit=CU.isCoach||CU.isManager||CU.isAssist;
-  if(!evs.length){document.getElementById("selected-day-events").innerHTML='<div class="empty" style="padding:16px 0;font-size:12px">Không có sự kiện ngày này.'+(canEdit?' Nhấn "+ Thêm" để tạo.':'')+'</div>';}
-  else{document.getElementById("selected-day-events").innerHTML=evs.map(function(ev){
-    var c=EVENT_COLORS[ev.type]||"#3D5470";
-    var del=canEdit?'<button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>':"";
-    var edit=canEdit?'<button class="btn btn-blue btn-sm" onclick="editEvent(\''+ev.id+'\')">✏️</button>':"";
-    return'<div class="sched-row event-type-'+ev.type+'"><div style="min-width:50px"><span class="sched-time" style="font-size:13px;color:'+c+'">'+(ev.time||"—")+'</span><div style="font-size:10px;color:var(--muted)">'+(ev.endtime||"")+'</div></div><div style="flex:1"><div style="font-weight:700;font-size:14px">'+esc(ev.name||EVENT_LABELS[ev.type])+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+mkTag(EVENT_LABELS[ev.type]||ev.type,c)+'</div>'+(ev.note?'<div style="font-size:11px;color:var(--muted);margin-top:4px">'+esc(ev.note)+'</div>':"")+' </div>'+edit+del+'</div>';
-  }).join("");}
-}
-function calNav(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
-function calToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCalendar();}
-function openAddEvent(){
-  if(!selDay){showToast("Chọn ngày trên lịch trước!","#ef4444");return;}
+function openAddEventNoDay(){
   openModal("event-modal");
   document.getElementById("em-title").textContent="➕ THÊM SỰ KIỆN";
   document.getElementById("em-id").value="";
-  document.getElementById("em-date").value=selDay;
+  document.getElementById("em-date").value=today();
   document.getElementById("em-time").value="";
   document.getElementById("em-endtime").value="";
   document.getElementById("em-type").value="scrim";
   document.getElementById("em-name").value="";
   document.getElementById("em-note").value="";
 }
+
+function openAddEventDate(date){
+  openModal("event-modal");
+  document.getElementById("em-title").textContent="➕ THÊM SỰ KIỆN";
+  document.getElementById("em-id").value="";
+  document.getElementById("em-date").value=date;
+  document.getElementById("em-time").value="";
+  document.getElementById("em-endtime").value="";
+  document.getElementById("em-type").value="scrim";
+  document.getElementById("em-name").value="";
+  document.getElementById("em-note").value="";
+}
+
+// Keep these for backward compat
+function openAddEvent(){openAddEventNoDay();}
+var selDay=null;
+var calYear=new Date().getFullYear();
+var calMonth=new Date().getMonth();
+function calNav(dir){}
+function calToday(){}
+function selectDay(date){selDay=date;}
+function renderCalendar(){}
+
 function editEvent(id){
   const ev=DATA.events.find(e=>String(e.id)===String(id));if(!ev)return;
   openModal("event-modal");
@@ -919,6 +977,7 @@ function editEvent(id){
   document.getElementById("em-name").value=ev.name||"";
   document.getElementById("em-note").value=ev.note||"";
 }
+
 function saveEvent(){
   var date=document.getElementById("em-date").value;
   if(!date){showToast("Chọn ngày!","#ef4444");return;}
@@ -928,35 +987,28 @@ function saveEvent(){
   else DATA.events.push(entry);
   DATA.events.sort(function(a,b){return a.date.localeCompare(b.date)||((a.time||"").localeCompare(b.time||""));});
   dSave("events",DATA.events,300);closeModal("event-modal");
-  renderCalendar();selectDay(date);renderUpcoming();
+  renderSchedule();
   showToast("💾 Đã lưu sự kiện!");
 }
 
-// ══════════════════════════════════════════════════
-// BUG FIX 2: deleteEvent - dùng String() để so sánh đúng
-// tránh lỗi number vs string khi filter
-// ══════════════════════════════════════════════════
 function deleteEvent(id){
   if(!confirm("Xóa sự kiện?"))return;
   DATA.events=DATA.events.filter(e=>String(e.id)!==String(id));
   dSave("events",DATA.events,300);
-  renderCalendar();
-  if(selDay)selectDay(selDay);
-  renderUpcoming();
+  renderSchedule();
 }
 
 function renderUpcoming(){
   var td=today();
   var upcoming=DATA.events.filter(function(e){return e.date>=td;}).sort(function(a,b){return a.date.localeCompare(b.date);}).slice(0,10);
-  var canEdit=CU.isCoach||CU.isManager||CU.isAssist;
+  var canEdit=CU&&(CU.isCoach||CU.isManager||CU.isAssist||CU.isSupv);
   var box=document.getElementById("upcoming-events");
-  if(!upcoming.length){box.innerHTML='<div class="empty" style="padding:20px 0;font-size:12px">Chưa có sự kiện nào.'+(canEdit?' Nhấn vào ngày trên lịch để thêm.':'')+'</div>';return;}
+  if(!upcoming.length){box.innerHTML='<div class="empty" style="padding:20px 0;font-size:12px">Chưa có sự kiện nào.</div>';return;}
   box.innerHTML=upcoming.map(function(ev){
     var c=EVENT_COLORS[ev.type]||"#3D5470";
     var isToday=ev.date===td;
-    var dateParts=ev.date.split("-");var dateLabel=dateParts[2]+"-"+dateParts[1];
-    var del=canEdit?'<button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>':"";
-    return'<div class="sched-row event-type-'+ev.type+'" style="border-left:3px solid '+c+'"><div style="min-width:55px;text-align:center"><div style="font-size:13px;font-weight:700;color:'+c+'">'+dateLabel+'</div><div style="font-size:10px;color:var(--muted)">'+(isToday?"Hôm nay":ev.date)+'</div></div><div style="flex:1"><div style="font-weight:700;font-size:14px">'+esc(ev.name||EVENT_LABELS[ev.type])+'</div><div style="margin-top:3px">'+mkTag(EVENT_LABELS[ev.type]||ev.type,c)+'</div></div>'+del+'</div>';
+    var dateParts=ev.date.split("-");var dateLabel=dateParts[2]+"/"+dateParts[1];
+    var del=canEdit?'<button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>':"";    return'<div class="sched-row event-type-'+ev.type+'" style="border-left:3px solid '+c+'"><div style="min-width:55px;text-align:center"><div style="font-size:13px;font-weight:700;color:'+c+'">'+dateLabel+'</div><div style="font-size:10px;color:var(--muted)">'+( isToday?"Hôm nay":ev.date)+'</div></div><div style="flex:1"><div style="font-weight:700;font-size:14px">'+esc(ev.name||EVENT_LABELS[ev.type]||ev.type)+'</div><div style="margin-top:3px">'+mkTag(EVENT_LABELS[ev.type]||ev.type,c)+'</div></div>'+del+'</div>';
   }).join("");
 }
 
