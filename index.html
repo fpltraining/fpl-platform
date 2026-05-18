@@ -248,32 +248,27 @@ th{color:var(--muted);font-size:10px;font-weight:700}
   </div>
 
   <div id="page-schedule" class="page">
-    <!-- Week nav -->
-    <div class="flex" style="justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <!-- Controls -->
+    <div class="flex" style="justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="flex" style="gap:8px">
         <button class="btn btn-gray btn-sm" onclick="schedNav(-1)">◀</button>
         <span id="sched-week-label" style="font-size:13px;font-weight:700;color:var(--gold);min-width:160px;text-align:center"></span>
         <button class="btn btn-gray btn-sm" onclick="schedNav(1)">▶</button>
         <button class="btn btn-gold btn-sm" onclick="schedWeekOff=0;renderSchedule()">Hôm nay</button>
       </div>
-      <div id="sched-add-btn" style="display:none">
-        <button class="btn btn-green btn-sm" onclick="openAddEventNoDay()">+ Thêm sự kiện</button>
+      <div class="flex" style="gap:6px">
+        <select id="sched-view" onchange="renderSchedule()" style="font-size:11px;padding:5px 8px;width:auto">
+          <option value="week">Tuần</option>
+          <option value="month">Tháng</option>
+        </select>
       </div>
     </div>
-    <!-- Week stats -->
-    <div class="flex" id="sched-stats" style="margin-bottom:14px;flex-wrap:wrap;gap:8px"></div>
-    <!-- Legend -->
-    <div class="flex" style="margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div><span style="font-size:10px;color:var(--muted)">Scrim</span></div>
-      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div><span style="font-size:10px;color:var(--muted)">Thi đấu</span></div>
-      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--orange)"></div><span style="font-size:10px;color:var(--muted)">Tập luyện</span></div>
-      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple)"></div><span style="font-size:10px;color:var(--muted)">Họp</span></div>
-      <div class="flex" style="gap:4px"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold)"></div><span style="font-size:10px;color:var(--muted)">Sự kiện đặc biệt</span></div>
+    <!-- Sheet table -->
+    <div style="overflow-x:auto;margin-bottom:16px">
+      <table id="sched-sheet" style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px"></table>
     </div>
-    <!-- Timeline -->
-    <div id="sched-timeline" style="position:relative;padding-left:22px;border-left:2px solid var(--bdr)"></div>
     <!-- Upcoming -->
-    <div class="card" style="margin-top:16px">
+    <div class="card">
       <div class="ct">📋 SỰ KIỆN SẮP TỚI</div>
       <div id="upcoming-events"></div>
     </div>
@@ -840,97 +835,189 @@ function saveHeroRename(){const meta=JSON.parse(document.getElementById("hm-meta
 // SCHEDULE
 // ══════════════════════════════════════════════════
 var schedWeekOff=0;
+var schedMonthOff=0;
 
-function schedNav(dir){schedWeekOff+=dir;renderSchedule();}
+function schedNav(dir){
+  var view=document.getElementById("sched-view")?document.getElementById("sched-view").value:"week";
+  if(view==="month")schedMonthOff+=dir;
+  else schedWeekOff+=dir;
+  renderSchedule();
+}
 
 function renderSchedule(){
   var canEdit=CU&&(CU.isCoach||CU.isManager||CU.isAssist||CU.isSupv);
-  var addBtn=document.getElementById("sched-add-btn");
-  if(addBtn)addBtn.style.display=canEdit?"block":"none";
-
-  var ws=wkS(schedWeekOff);
-  var we=new Date(ws+"T00:00:00");we.setDate(we.getDate()+6);
-  var weParts=[we.getFullYear(),String(we.getMonth()+1).padStart(2,"0"),String(we.getDate()).padStart(2,"0")].join("-");
-  var wsFmt=ws.split("-")[2]+"/"+ws.split("-")[1];
-  var weFmt=weParts.split("-")[2]+"/"+weParts.split("-")[1]+"/"+weParts.split("-")[0];
-  document.getElementById("sched-week-label").textContent=wsFmt+" – "+weFmt;
-
+  var view=document.getElementById("sched-view")?document.getElementById("sched-view").value:"week";
   var td=today();
+
+  var TYPE_COLOR={scrim:"#3b82f6",match:"#22c55e",training:"#f97316",meeting:"#a855f7",rest:"#3D5470"};
+  var TYPE_LABEL={scrim:"Scrim",match:"Thi đấu",training:"Tập luyện",meeting:"Họp",rest:"Nghỉ"};
+  var TYPE_BG={scrim:"#3b82f618",match:"#22c55e18",training:"#f9731618",meeting:"#a855f718",rest:"#3D547018"};
   var DAY_NAMES=["CN","T2","T3","T4","T5","T6","T7"];
-  var TYPE_CFG={
-    scrim:{icon:"⚔️",color:"var(--blue)",label:"Scrim"},
-    match:{icon:"🏆",color:"var(--green)",label:"Thi đấu"},
-    training:{icon:"🗡️",color:"var(--orange)",label:"Tập luyện"},
-    meeting:{icon:"💬",color:"var(--purple)",label:"Họp đội"},
-    rest:{icon:"😴",color:"var(--muted)",label:"Nghỉ"},
-  };
 
-  // Build 7 days
+  // Build date range
   var days=[];
-  for(var i=0;i<7;i++){var d=new Date(ws+"T00:00:00");d.setDate(d.getDate()+i);days.push(d);}
+  if(view==="week"){
+    var ws=wkS(schedWeekOff);
+    var d0=new Date(ws+"T00:00:00");
+    for(var i=0;i<7;i++){var d=new Date(d0);d.setDate(d0.getDate()+i);days.push(d);}
+    var we=new Date(days[6]);
+    document.getElementById("sched-week-label").textContent=
+      days[0].getDate()+"/"+(days[0].getMonth()+1)+" – "+days[6].getDate()+"/"+(days[6].getMonth()+1)+"/"+days[6].getFullYear();
+  } else {
+    // Month view
+    var now=new Date();
+    var yr=now.getFullYear();var mo=now.getMonth()+schedMonthOff;
+    while(mo>11){mo-=12;yr++;}while(mo<0){mo+=12;yr--;}
+    var first=new Date(yr,mo,1);var last=new Date(yr,mo+1,0);
+    document.getElementById("sched-week-label").textContent="Tháng "+(mo+1)+"/"+yr;
+    for(var dd=1;dd<=last.getDate();dd++){days.push(new Date(yr,mo,dd));}
+  }
 
-  // Stats
-  var weekEvs=[];
-  days.forEach(function(d){
-    var ds=[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
-    DATA.events.filter(function(e){return e.date===ds;}).forEach(function(e){weekEvs.push(e);});
-  });
-  var nScrim=weekEvs.filter(function(e){return e.type==="scrim";}).length;
-  var nMatch=weekEvs.filter(function(e){return e.type==="match";}).length;
-  var nOther=weekEvs.filter(function(e){return e.type!=="scrim"&&e.type!=="match";}).length;
-  var statsHtml="";
-  if(nScrim)statsHtml+='<div style="background:#3b82f611;border:1px solid #3b82f633;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--blue)">⚔️ '+nScrim+' scrim</div>';
-  if(nMatch)statsHtml+='<div style="background:#22c55e11;border:1px solid #22c55e33;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--green)">🏆 '+nMatch+' thi đấu</div>';
-  if(nOther)statsHtml+='<div style="background:#C8A94A11;border:1px solid #C8A94A33;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--gold)">⭐ '+nOther+' sự kiện khác</div>';
-  if(!weekEvs.length)statsHtml='<div style="font-size:12px;color:var(--muted)">Không có sự kiện tuần này</div>';
-  document.getElementById("sched-stats").innerHTML=statsHtml;
+  // Build table
+  var html='<thead><tr>';
+  html+='<th style="background:var(--mid);padding:8px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;white-space:nowrap;border:1px solid var(--bdr);min-width:80px">NGÀY</th>';
+  html+='<th style="background:var(--mid);padding:8px 10px;text-align:center;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;border:1px solid var(--bdr);min-width:100px">LOẠI</th>';
+  html+='<th style="background:var(--mid);padding:8px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;border:1px solid var(--bdr);min-width:110px">ĐỘI 1</th>';
+  html+='<th style="background:var(--mid);padding:8px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;border:1px solid var(--bdr);min-width:110px">ĐỘI 2</th>';
+  html+='<th style="background:var(--mid);padding:8px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;border:1px solid var(--bdr);min-width:110px">ĐỘI 3</th>';
+  html+='<th style="background:var(--mid);padding:8px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;border:1px solid var(--bdr);min-width:80px">GIỜ</th>';
+  html+='<th style="background:var(--mid);padding:8px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;border:1px solid var(--bdr)">GHI CHÚ</th>';
+  if(canEdit)html+='<th style="background:var(--mid);padding:8px 10px;text-align:center;font-size:10px;color:var(--muted);font-weight:700;border:1px solid var(--bdr);min-width:70px">THAO TÁC</th>';
+  html+='</tr></thead><tbody>';
 
-  // Timeline
-  var html="";
   days.forEach(function(d){
     var ds=[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
     var dayEvs=DATA.events.filter(function(e){return e.date===ds;}).sort(function(a,b){return(a.time||"").localeCompare(b.time||"");});
     var isToday=ds===td;
-    var hasEv=dayEvs.length>0;
-    var dotColor=hasEv?"var(--gold)":"var(--bdr)";
-    if(isToday)dotColor="var(--green)";
+    var isPast=ds<td;
+    var dayLabel=DAY_NAMES[d.getDay()]+" "+d.getDate()+"/"+(d.getMonth()+1);
+    var rowBg=isToday?"background:#C8A94A11":isPast?"background:#ffffff04":"";
 
-    html+='<div style="position:relative;margin-bottom:16px">';
-    // Dot
-    html+='<div style="position:absolute;left:-28px;top:14px;width:10px;height:10px;border-radius:50%;background:'+dotColor+';border:2px solid '+dotColor+';'+(isToday?"box-shadow:0 0 8px #22c55e88;":"")+(hasEv&&!isToday?"box-shadow:0 0 6px #C8A94A55;":"")+'"></div>';
-    // Day header
-    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
-    html+='<span style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:2px;min-width:22px">'+DAY_NAMES[d.getDay()]+'</span>';
-    html+='<span style="font-size:18px;font-weight:900;color:'+(isToday?"var(--gold)":"var(--txt)")+'">'+d.getDate()+'/'+(d.getMonth()+1)+(isToday?' 📍':'')+'</span>';
-    if(canEdit){html+='<button onclick="openAddEventDate(\''+ds+'\')" class="btn btn-gray btn-sm" style="margin-left:auto;font-size:10px">+ Thêm</button>';}
-    html+='</div>';
-
-    if(!dayEvs.length){
-      html+='<div style="font-size:11px;color:#3D547055;padding:4px 0;font-style:italic">— Không có sự kiện</div>';
+    if(dayEvs.length===0){
+      // Empty row - editable if coach
+      html+='<tr style="'+rowBg+'">';
+      html+='<td style="padding:7px 10px;border:1px solid var(--bdr);font-weight:'+(isToday?"900":"400")+';color:'+(isToday?"var(--gold)":"var(--txt)")+';white-space:nowrap">'+dayLabel+'</td>';
+      if(canEdit){
+        html+='<td style="padding:4px;border:1px solid var(--bdr)">';
+        html+='<select onchange="quickAddEvent(\''+ds+'\',this)" style="background:#030709;border:none;color:var(--muted);font-size:11px;width:100%;padding:3px;font-family:inherit">';
+        html+='<option value="">—</option>';
+        html+='<option value="scrim">⚔️ Scrim</option>';
+        html+='<option value="match">🏆 Thi đấu</option>';
+        html+='<option value="training">🗡️ Tập luyện</option>';
+        html+='<option value="meeting">💬 Họp</option>';
+        html+='<option value="rest">😴 Nghỉ</option>';
+        html+='</select></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Đội 1..." onblur="quickSaveCell(\''+ds+'\',\'team1\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Đội 2..." onblur="quickSaveCell(\''+ds+'\',\'team2\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Đội 3..." onblur="quickSaveCell(\''+ds+'\',\'team3\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input type="time" onblur="quickSaveCell(\''+ds+'\',\'time\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr)"><input placeholder="Ghi chú..." onblur="quickSaveCell(\''+ds+'\',\'note\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:3px;outline:none"></td>';
+        html+='<td style="padding:4px;border:1px solid var(--bdr);text-align:center"></td>';
+      } else {
+        html+='<td colspan="7" style="padding:7px 10px;border:1px solid var(--bdr);color:#3D547055;font-size:11px;font-style:italic">—</td>';
+      }
+      html+='</tr>';
     } else {
-      dayEvs.forEach(function(ev){
-        var cfg=TYPE_CFG[ev.type]||TYPE_CFG.scrim;
-        var bc=ev.type==="match"?"#22c55e":ev.type==="scrim"?"#3b82f6":ev.type==="meeting"?"#a855f7":ev.type==="training"?"#f97316":"#3D5470";
-        html+='<div style="background:var(--card);border:1px solid '+bc+'33;border-left:3px solid '+bc+';border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px">';
-        html+='<span style="font-size:18px;min-width:26px;text-align:center">'+cfg.icon+'</span>';
-        html+='<div style="flex:1">';
-        html+='<div style="font-weight:700;font-size:14px;color:'+bc+'">'+esc(ev.name||EVENT_LABELS[ev.type]||ev.type)+'</div>';
-        if(ev.time){html+='<div style="font-size:11px;color:var(--muted);margin-top:2px">🕐 '+ev.time+(ev.endtime?' – '+ev.endtime:'')+'</div>';}
-        if(ev.note){html+='<div style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(ev.note)+'</div>';}
-        html+='</div>';
-        if(canEdit){
-          html+='<button class="btn btn-blue btn-sm" onclick="editEvent(\''+ev.id+'\')">✏️</button>';
-          html+='<button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>';
+      dayEvs.forEach(function(ev,ei){
+        var tc=TYPE_COLOR[ev.type]||"#C8A94A";
+        var tbg=TYPE_BG[ev.type]||"#C8A94A11";
+        var tl=TYPE_LABEL[ev.type]||ev.type;
+        // Parse teams from name (format: "team1 | team2 | team3")
+        var parts=(ev.name||"").split("|").map(function(s){return s.trim();});
+        var t1=parts[0]||"";var t2=parts[1]||"";var t3=parts[2]||"";
+        // If name doesn't have | separator, put whole name in t1
+        if(parts.length===1&&ev.name){t1=ev.name;}
+
+        html+='<tr style="'+rowBg+';'+tbg+'">';
+        if(ei===0){
+          html+='<td style="padding:7px 10px;border:1px solid var(--bdr);font-weight:'+(isToday?"900":"600")+';color:'+(isToday?"var(--gold)":"var(--txt)")+';white-space:nowrap" rowspan="'+dayEvs.length+'">'+dayLabel+'</td>';
         }
-        html+='</div>';
+        // Type
+        html+='<td style="padding:4px 8px;border:1px solid var(--bdr);text-align:center">';
+        if(canEdit){
+          html+='<select onchange="updateEventField(\''+ev.id+'\',\'type\',this.value)" style="background:#030709;border:1px solid '+tc+'33;color:'+tc+';font-size:10px;font-weight:700;padding:3px;border-radius:4px;font-family:inherit;width:100%">';
+          ['scrim','match','training','meeting','rest'].forEach(function(t){
+            html+='<option value="'+t+'"'+(ev.type===t?' selected':'')+'>'+TYPE_LABEL[t]+'</option>';
+          });
+          html+='</select>';
+        } else {
+          html+='<span style="background:'+tc+'22;border:1px solid '+tc+'44;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700;color:'+tc+'">'+tl+'</span>';
+        }
+        html+='</td>';
+
+        // Teams
+        if(canEdit){
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t1)+'" onblur="updateEventTeam(\''+ev.id+'\',0,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:var(--txt);font-size:12px;font-weight:700;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t2)+'" onblur="updateEventTeam(\''+ev.id+'\',1,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:var(--txt);font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t3)+'" onblur="updateEventTeam(\''+ev.id+'\',2,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:var(--txt);font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input type="time" value="'+esc(ev.time||'')+'" onblur="updateEventField(\''+ev.id+'\',\'time\',this.value)" style="background:transparent;border:none;color:var(--gold);font-size:11px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(ev.note||'')+'" onblur="updateEventField(\''+ev.id+'\',\'note\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:4px;border:1px solid var(--bdr);text-align:center"><button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button></td>';
+        } else {
+          html+='<td style="padding:7px 10px;border:1px solid var(--bdr);font-weight:700">'+esc(t1)+'</td>';
+          html+='<td style="padding:7px 10px;border:1px solid var(--bdr)">'+esc(t2)+'</td>';
+          html+='<td style="padding:7px 10px;border:1px solid var(--bdr)">'+esc(t3)+'</td>';
+          html+='<td style="padding:7px 10px;border:1px solid var(--bdr);color:var(--gold)">'+esc(ev.time||'')+'</td>';
+          html+='<td style="padding:7px 10px;border:1px solid var(--bdr);color:var(--muted)">'+esc(ev.note||'')+'</td>';
+        }
+        html+='</tr>';
       });
     }
-    html+='</div>';
   });
-  document.getElementById("sched-timeline").innerHTML=html;
+
+  html+='</tbody>';
+  document.getElementById("sched-sheet").innerHTML=html;
   renderUpcoming();
 }
 
+// Quick add from empty row dropdown
+var _quickDraft={};
+function quickAddEvent(date,sel){
+  if(!sel.value){_quickDraft[date]=null;return;}
+  _quickDraft[date]={date:date,type:sel.value,name:"",note:"",time:""};
+}
+function quickSaveCell(date,field,val){
+  if(!val.trim())return;
+  if(!_quickDraft[date])_quickDraft[date]={date:date,type:"scrim",name:"",note:"",time:""};
+  var d=_quickDraft[date];
+  if(field==="team1"||field==="team2"||field==="team3"){
+    var parts=(d.name||"").split("|").map(function(s){return s.trim();});
+    while(parts.length<3)parts.push("");
+    var idx=field==="team1"?0:field==="team2"?1:2;
+    parts[idx]=val;
+    d.name=parts.filter(function(p,i){return p||i<idx;}).join(" | ").replace(/\s*\|\s*$/,"").trim();
+  } else {
+    d[field]=val;
+  }
+  // Save to DATA.events
+  var existing=DATA.events.findIndex(function(e){return e.date===date&&e.type===d.type&&!e.id;});
+  var entry={id:String(Date.now()),date:d.date,type:d.type,name:d.name,note:d.note,time:d.time,endtime:""};
+  DATA.events.push(entry);
+  DATA.events.sort(function(a,b){return a.date.localeCompare(b.date)||((a.time||"").localeCompare(b.time||""));});
+  dSaveNow("events",DATA.events);
+  _quickDraft[date]=null;
+  setTimeout(renderSchedule,200);
+}
+
+// Update existing event field inline
+function updateEventField(id,field,val){
+  var idx=DATA.events.findIndex(function(e){return String(e.id)===String(id);});
+  if(idx<0)return;
+  DATA.events[idx][field]=val;
+  dSaveNow("events",DATA.events);
+}
+
+// Update team columns inline
+function updateEventTeam(id,teamIdx,val,currentName){
+  var parts=currentName.split("|").map(function(s){return s.trim();});
+  while(parts.length<3)parts.push("");
+  parts[teamIdx]=val;
+  var newName=parts.map(function(p){return p.trim();}).join(" | ").replace(/(\s*\|\s*)*$/,"").trim();
+  updateEventField(id,"name",newName);
+}
+
+// Keep these stubs
+function openAddEvent(){openAddEventNoDay();}
 function openAddEventNoDay(){
   openModal("event-modal");
   document.getElementById("em-title").textContent="➕ THÊM SỰ KIỆN";
@@ -942,21 +1029,15 @@ function openAddEventNoDay(){
   document.getElementById("em-name").value="";
   document.getElementById("em-note").value="";
 }
-
 function openAddEventDate(date){
   openModal("event-modal");
   document.getElementById("em-title").textContent="➕ THÊM SỰ KIỆN";
   document.getElementById("em-id").value="";
   document.getElementById("em-date").value=date;
-  document.getElementById("em-time").value="";
-  document.getElementById("em-endtime").value="";
+  document.getElementById("em-time").value="";document.getElementById("em-endtime").value="";
   document.getElementById("em-type").value="scrim";
-  document.getElementById("em-name").value="";
-  document.getElementById("em-note").value="";
+  document.getElementById("em-name").value="";document.getElementById("em-note").value="";
 }
-
-// Keep these for backward compat
-function openAddEvent(){openAddEventNoDay();}
 var selDay=null;
 var calYear=new Date().getFullYear();
 var calMonth=new Date().getMonth();
@@ -966,7 +1047,7 @@ function selectDay(date){selDay=date;}
 function renderCalendar(){}
 
 function editEvent(id){
-  const ev=DATA.events.find(e=>String(e.id)===String(id));if(!ev)return;
+  var ev=DATA.events.find(function(e){return String(e.id)===String(id);});if(!ev)return;
   openModal("event-modal");
   document.getElementById("em-title").textContent="✏️ SỬA SỰ KIỆN";
   document.getElementById("em-id").value=String(ev.id);
@@ -977,7 +1058,6 @@ function editEvent(id){
   document.getElementById("em-name").value=ev.name||"";
   document.getElementById("em-note").value=ev.note||"";
 }
-
 function saveEvent(){
   var date=document.getElementById("em-date").value;
   if(!date){showToast("Chọn ngày!","#ef4444");return;}
@@ -986,29 +1066,29 @@ function saveEvent(){
   if(eid){var i=DATA.events.findIndex(function(e){return String(e.id)===String(eid);});if(i>=0)DATA.events[i]=entry;else DATA.events.push(entry);}
   else DATA.events.push(entry);
   DATA.events.sort(function(a,b){return a.date.localeCompare(b.date)||((a.time||"").localeCompare(b.time||""));});
-  dSave("events",DATA.events,300);closeModal("event-modal");
-  renderSchedule();
-  showToast("💾 Đã lưu sự kiện!");
+  dSaveNow("events",DATA.events);closeModal("event-modal");
+  renderSchedule();showToast("💾 Đã lưu sự kiện!");
 }
-
 function deleteEvent(id){
   if(!confirm("Xóa sự kiện?"))return;
-  DATA.events=DATA.events.filter(e=>String(e.id)!==String(id));
-  dSave("events",DATA.events,300);
+  DATA.events=DATA.events.filter(function(e){return String(e.id)!==String(id);});
+  dSaveNow("events",DATA.events);
   renderSchedule();
 }
-
 function renderUpcoming(){
   var td=today();
   var upcoming=DATA.events.filter(function(e){return e.date>=td;}).sort(function(a,b){return a.date.localeCompare(b.date);}).slice(0,10);
   var canEdit=CU&&(CU.isCoach||CU.isManager||CU.isAssist||CU.isSupv);
   var box=document.getElementById("upcoming-events");
   if(!upcoming.length){box.innerHTML='<div class="empty" style="padding:20px 0;font-size:12px">Chưa có sự kiện nào.</div>';return;}
+  var TYPE_COLOR={scrim:"#3b82f6",match:"#22c55e",training:"#f97316",meeting:"#a855f7",rest:"#3D5470"};
+  var TYPE_LABEL={scrim:"⚔️ Scrim",match:"🏆 Thi đấu",training:"🗡️ Tập luyện",meeting:"💬 Họp",rest:"😴 Nghỉ"};
   box.innerHTML=upcoming.map(function(ev){
-    var c=EVENT_COLORS[ev.type]||"#3D5470";
+    var c=TYPE_COLOR[ev.type]||"#C8A94A";
     var isToday=ev.date===td;
-    var dateParts=ev.date.split("-");var dateLabel=dateParts[2]+"/"+dateParts[1];
-    var del=canEdit?'<button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>':"";    return'<div class="sched-row event-type-'+ev.type+'" style="border-left:3px solid '+c+'"><div style="min-width:55px;text-align:center"><div style="font-size:13px;font-weight:700;color:'+c+'">'+dateLabel+'</div><div style="font-size:10px;color:var(--muted)">'+( isToday?"Hôm nay":ev.date)+'</div></div><div style="flex:1"><div style="font-weight:700;font-size:14px">'+esc(ev.name||EVENT_LABELS[ev.type]||ev.type)+'</div><div style="margin-top:3px">'+mkTag(EVENT_LABELS[ev.type]||ev.type,c)+'</div></div>'+del+'</div>';
+    var parts=ev.date.split("-");var dl=parts[2]+"/"+parts[1];
+    var del=canEdit?'<button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>':"";
+    return'<div class="sched-row" style="border-left:3px solid '+c+'"><div style="min-width:50px;text-align:center"><div style="font-size:13px;font-weight:700;color:'+c+'">'+dl+'</div><div style="font-size:10px;color:var(--muted)">'+(isToday?"Hôm nay":"")+ev.date.split("-")[0]+'</div></div><div style="flex:1"><div style="font-weight:700;font-size:13px">'+esc(ev.name||TYPE_LABEL[ev.type]||ev.type)+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+(ev.time?'🕐 '+ev.time+' · ':'')+( TYPE_LABEL[ev.type]||ev.type)+'</div></div>'+del+'</div>';
   }).join("");
 }
 
