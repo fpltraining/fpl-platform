@@ -1173,7 +1173,7 @@ function exportPDF(){
   html+='</div>';
   const perfWk=DATA.performance[wk]||{};
   html+='<div><div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#C8A94A;border-bottom:1px solid #1A2E48;padding-bottom:6px">⭐ ĐÁNH GIÁ HIỆU SUẤT</div>';
-  html+=PIDS.map(pid=>{const p=pInfo(pid);const pd=perfWk[pid]||{};const sc=[pd.mechanics,pd.macro,pd.mental].filter(Boolean).map(Number);const avg=sc.length===3?Math.round(sc.reduce((a,b)=>a+b,0)/3*10)/10:"—";return'<div style="margin-bottom:10px"><div style="font-weight:700">'+p.avatar+' '+p.name+'</div><div style="display:flex;gap:16px;font-size:12px;color:#3D5470"><span>Mechanics: <strong>'+(pd.mechanics||"—")+'</strong></span><span>Macro: <strong>'+(pd.macro||"—")+'</strong></span><span>Mental: <strong>'+(pd.mental||"—")+'</strong></span><span style="color:#C8A94A;font-weight:700">TB: '+avg+'</span></div>'+(pd.comment?'<div style="font-size:11px;color:#64748b;margin-top:2px">Coach: '+esc(pd.comment)+'</div>':"")+' </div>';}).join("")+'</div>';
+  html+=PIDS.map(pid=>{const p=pInfo(pid);const pd=perfWk[pid]||{};const sc=[pd.mechanics,pd.macro,pd.mental].filter(Boolean).map(Number);const avg=sc.length===3?Math.round(sc.reduce((a,b)=>a+b,0)/3*10)/10:"—";return'<div style="margin-bottom:10px"><div style="font-weight:700">'+p.avatar+' '+p.name+'</div><div style="display:flex;gap:16px;font-size:12px;color:#3D5470"><span>Tay To: <strong>'+(pd.mechanics||"—")+'</strong></span><span>Đọc Trận Đấu: <strong>'+(pd.macro||"—")+'</strong></span><span>Tâm Lý Chiến: <strong>'+(pd.mental||"—")+'</strong></span><span style="color:#C8A94A;font-weight:700">TB: '+avg+'</span></div>'+(pd.comment?'<div style="font-size:11px;color:#64748b;margin-top:2px">Coach: '+esc(pd.comment)+'</div>':"")+' </div>';}).join("")+'</div>';
   document.getElementById("pdf-body").innerHTML=html;
   openModal("pdf-modal");
 }
@@ -1190,8 +1190,8 @@ function renderPerf(){
     const sc=[pd.mechanics,pd.macro,pd.mental].filter(Boolean).map(Number);
     const avg=sc.length===3?Math.round(sc.reduce((a,b)=>a+b,0)/3*10)/10:null;
     const avgC=avg>=7?"#22c55e":avg>=5?"#C8A94A":"#ef4444";
-    const boxes=["mechanics","macro","mental"].map((key,ki)=>{
-      const labels=["⚙️ Mechanics","🗺️ Macro","🧠 Mental"];
+    const boxes=["tay_to","doc_tran","tam_ly"].map((key,ki)=>{
+      const labels=["🤌 Tay To","🧠 Đọc Trận Đấu","💪 Tâm Lý Chiến"];
       const cnt=isCoach?'<div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap">'+[1,2,3,4,5,6,7,8,9,10].map(n=>{const act=pd[key]===n;return'<button onclick="savePerfF(\''+pid+'\',\''+key+'\','+n+')" style="width:24px;height:24px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid '+(act?"var(--gold)":"var(--bdr)")+';background:'+(act?"#C8A94A44":"transparent")+';color:'+(act?"var(--gold)":"var(--muted)")+'">'+n+'</button>';}).join("")+'</div>':'<div style="font-size:32px;font-weight:900;color:'+(pd[key]>=7?"#22c55e":pd[key]>=5?"#C8A94A":pd[key]?"#ef4444":"var(--muted)")+'">'+(pd[key]||"—")+'</div>';
       return'<div style="background:var(--mid);border-radius:9px;padding:12px 10px;text-align:center"><div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+labels[ki]+'</div>'+cnt+'</div>';
     }).join("");
@@ -1200,7 +1200,7 @@ function renderPerf(){
     return'<div class="card"><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap"><span style="font-size:26px">'+p.avatar+'</span><div style="flex:1"><div style="font-weight:800">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--muted)">'+p.pos+'</div></div>'+(avg?'<div style="text-align:right"><div style="font-size:24px;font-weight:900;color:'+avgC+'">'+avg+'</div><div style="font-size:9px;color:var(--muted)">TB</div></div>':"")+' </div><div class="g3" style="margin-bottom:14px">'+boxes+'</div><div style="margin-bottom:10px"><label class="lbl">NHẬN XÉT TỪ COACH</label>'+comment+'</div><div><label class="lbl">'+(isCoach?"TỰ NHẬN XÉT":"✍️ TỰ NHẬN XÉT CỦA BẠN")+'</label>'+selfR+'</div></div>';
   }).join("");
 }
-function savePerfF(pid,field,val){const vw=wkS(perfOff);if(!DATA.performance[vw])DATA.performance[vw]={};if(!DATA.performance[vw][pid])DATA.performance[vw][pid]={};DATA.performance[vw][pid][field]=val;dSave("performance",DATA.performance,1500);if(["mechanics","macro","mental"].includes(field))setTimeout(renderPerf,50);}
+function savePerfF(pid,field,val){const vw=wkS(perfOff);if(!DATA.performance[vw])DATA.performance[vw]={};if(!DATA.performance[vw][pid])DATA.performance[vw][pid]={};DATA.performance[vw][pid][field]=val;dSave("performance",DATA.performance,1500);if(["tay_to","doc_tran","tam_ly"].includes(field))setTimeout(renderPerf,50);}
 function perfNav(dir){perfOff+=dir;renderPerf();}
 
 // ══════════════════════════════════════════════════
