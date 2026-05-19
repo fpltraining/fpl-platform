@@ -1349,14 +1349,21 @@ function saveOppNoteEl(el){var opp=el.getAttribute("data-opp");if(!DATA.oppNotes
 // ══════════════════════════════════════════════════
 var rankTab="attendance";
 function setRankTab(tab,btn){rankTab=tab;document.querySelectorAll("[id^='rt-']").forEach(function(b){b.className="btn btn-gray btn-sm";});if(btn)btn.className="btn btn-gold btn-sm";renderRanking();}
+function timeToMins(t){if(!t||t==="Manual")return 999;var p=t.split(":");if(p.length<2)return 999;return parseInt(p[0])*60+parseInt(p[1]);}
+
 function renderRanking(){
   var pids=["p1","p2","p3","p4","p5"];var wk=wkS(0);var td=today();
   var wDays=Array.from({length:7},function(_,i){var d=new Date(wk);d.setDate(d.getDate()+i);return d.toISOString().slice(0,10);});
   var ranked=pids.map(function(pid){
     var p=pInfo(pid);
-    var pres=wDays.filter(function(d){var r=DATA.attendance[d+"_"+pid];return d<=td&&r&&r.status!=="absent";}).length;
+    var presRecs=wDays.filter(function(d){var r=DATA.attendance[d+"_"+pid];return d<=td&&r&&r.status!=="absent";});
+    var pres=presRecs.length;
     var cnt=wDays.filter(function(d){return d<=td;}).length||1;
     var attPct=Math.round(pres/cnt*100);
+    // Average checkin time (minutes from midnight)
+    var times=presRecs.map(function(d){var r=DATA.attendance[d+"_"+pid];return r?timeToMins(r.time):999;}).filter(function(m){return m<999;});
+    var avgMins=times.length?Math.round(times.reduce(function(a,b){return a+b;},0)/times.length):999;
+    var avgTimeStr=avgMins<999?(Math.floor(avgMins/60)+":"+String(avgMins%60).padStart(2,"0")):"—";
     var tasks=(DATA.weekTasks[wk]||{})[pid]||{};var taskList=Object.values(tasks);
     var done=taskList.filter(function(t){return t.hero&&parseInt(t.played||0)>=parseInt(t.required||1);}).length;
     var total=taskList.filter(function(t){return t.hero;}).length||1;
@@ -1364,17 +1371,47 @@ function renderRanking(){
     var pd2=(DATA.performance[wk]||{})[pid]||{};
     var sc2=[pd2.mechanics,pd2.macro,pd2.mental].filter(Boolean).map(Number);
     var perfAvg=sc2.length===3?Math.round(sc2.reduce(function(a,b){return a+b;},0)/3*10)/10:0;
-    return{pid,p,attPct,trainPct,perfAvg,streak:getStreak(pid)};
+    return{pid,p,attPct,trainPct,perfAvg,streak:getStreak(pid),avgMins,avgTimeStr};
   });
-  if(rankTab==="attendance")ranked.sort(function(a,b){return b.attPct-a.attPct||b.streak-a.streak;});
-  else if(rankTab==="training")ranked.sort(function(a,b){return b.trainPct-a.trainPct;});
-  else ranked.sort(function(a,b){return b.perfAvg-a.perfAvg;});
+  // Sort
+  if(rankTab==="attendance"){
+    // If all same attPct -> sort by earliest checkin time
+    ranked.sort(function(a,b){
+      if(b.attPct!==a.attPct)return b.attPct-a.attPct;
+      if(b.streak!==a.streak)return b.streak-a.streak;
+      return a.avgMins-b.avgMins; // earlier = better
+    });
+  } else if(rankTab==="training"){
+    ranked.sort(function(a,b){return b.trainPct-a.trainPct;});
+  } else {
+    ranked.sort(function(a,b){return b.perfAvg-a.perfAvg;});
+  }
   var medals=["🥇","🥈","🥉"];
   var el=document.getElementById("ranking-list");if(!el)return;
   el.innerHTML=ranked.map(function(r,i){
-    var val=rankTab==="attendance"?r.attPct+"%":rankTab==="training"?r.trainPct+"%":(r.perfAvg||"—");
+    var val,sub;
+    if(rankTab==="attendance"){
+      val=r.attPct+"%";
+      // Show avg time as sub info
+      if(r.attPct===100&&r.avgTimeStr!=="—"){
+        sub='⏰ TB '+r.avgTimeStr+(i===0?' 🏆 Sớm nhất':i===ranked.length-1?' 🐢 Muộn nhất':'');
+      } else {
+        sub='streak: '+r.streak+'🔥';
+      }
+    } else if(rankTab==="training"){
+      val=r.trainPct+"%";sub="hoàn thành";
+    } else {
+      val=r.perfAvg||"—";sub="điểm TB";
+    }
     var c=i===0?"#FFD700":i===1?"#C0C0C0":i===2?"#CD7F32":"var(--muted)";
-    return'<div style="display:flex;align-items:center;gap:12px;background:var(--mid);border-radius:10px;padding:12px 14px;margin-bottom:8px;'+(i===0?"border:1px solid #FFD70044;":"")+'"><div style="font-size:'+(i<3?22:16)+'px;min-width:30px;text-align:center">'+(medals[i]||"#"+(i+1))+'</div><span style="font-size:22px">'+r.p.avatar+'</span><div style="flex:1"><div style="font-weight:800;font-size:14px">'+esc(r.p.name)+'</div><div style="font-size:10px;color:var(--muted)">'+r.p.pos+'</div></div><div style="text-align:right"><div style="font-size:20px;font-weight:900;color:'+c+'">'+val+'</div><div style="font-size:9px;color:var(--muted)">'+(rankTab==="attendance"?"streak: "+r.streak+"🔥":rankTab==="training"?"hoàn thành":"điểm TB")+'</div></div></div>';
+    var subColor=rankTab==="attendance"&&r.attPct===100?(i===0?"#22c55e":i===ranked.length-1?"#ef4444":"var(--muted)"):"var(--muted)";
+    return'<div style="display:flex;align-items:center;gap:12px;background:var(--mid);border-radius:10px;padding:12px 14px;margin-bottom:8px;'+(i===0?"border:1px solid #FFD70044;":"")+'">'
+      +'<div style="font-size:'+(i<3?22:16)+'px;min-width:30px;text-align:center">'+(medals[i]||"#"+(i+1))+'</div>'
+      +'<span style="font-size:22px">'+r.p.avatar+'</span>'
+      +'<div style="flex:1"><div style="font-weight:800;font-size:14px">'+esc(r.p.name)+'</div>'
+      +'<div style="font-size:10px;color:'+subColor+';margin-top:2px">'+sub+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:20px;font-weight:900;color:'+c+'">'+val+'</div></div>'
+      +'</div>';
   }).join("");
 }
 
