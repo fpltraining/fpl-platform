@@ -773,7 +773,27 @@ function renderAtt(){
     const pres=wDays.filter(d=>{const r=DATA.attendance[d.date+"_"+pid];return r&&r.status!=="absent";}).length;
     const cnt=wDays.filter(d=>d.date<=td).length||1;
     const pct=Math.round(pres/cnt*100);
-    return'<tr><td><span style="margin-right:6px">'+p.avatar+'</span><span style="font-weight:700">'+esc(p.name)+'</span><span style="font-size:10px;color:var(--muted);margin-left:6px">'+p.pos+'</span></td>'+wDays.map(d=>{const s=DATA.attendance[d.date+"_"+pid];return'<td>'+(s?'<span style="font-size:14px;color:'+(SC[s.status]||"#22c55e")+'">'+(s.status==="absent"?"❌":s.status==="late"?"🟡":"✅")+'</span>':d.date>td?'<span style="color:var(--bdr)">—</span>':'<span style="font-size:14px">⬜</span>')+'</td>';}).join("")+'<td><span style="font-weight:800;color:'+(pct>=80?"#22c55e":pct>=60?"#C8A94A":"#ef4444")+'">'+pct+'%</span></td></tr>';
+    return'<tr><td><span style="margin-right:6px">'+p.avatar+'</span><span style="font-weight:700">'+esc(p.name)+'</span><span style="font-size:10px;color:var(--muted);margin-left:6px">'+p.pos+'</span></td>'+
+    wDays.map(d=>{
+      const s=DATA.attendance[d.date+"_"+pid];
+      const isFuture=d.date>td;
+      let cell='';
+      if(isFuture){
+        cell='<span style="color:var(--bdr)">—</span>';
+      } else if(isCoach){
+        // Coach: show status + mini buttons to fix
+        const icon=s?(s.status==="absent"?"❌":s.status==="late"?"🟡":"✅"):"⬜";
+        const time=s&&s.time&&s.time!=="Manual"?'<div style="font-size:9px;color:var(--muted)">'+s.time+'</div>':"";
+        const btns='<div style="display:flex;gap:2px;justify-content:center;margin-top:2px">'+
+          ["present","late","absent"].map(st=>'<button onclick="markAtt(''+pid+'',''+d.date+'',''+st+'')" style="font-size:8px;padding:1px 4px;border-radius:3px;cursor:pointer;font-family:inherit;font-weight:700;border:1px solid '+SC[st]+';background:'+(s&&s.status===st?SC[st]+"44":"transparent")+';color:'+SC[st]+'">'+(st==="present"?"✓":st==="late"?"~":"✗")+'</button>').join("")+
+          '</div>';
+        cell='<div style="text-align:center"><div style="font-size:13px">'+icon+'</div>'+time+btns+'</div>';
+      } else {
+        cell=s?'<span style="font-size:14px;color:'+(SC[s.status]||"#22c55e")+'">'+(s.status==="absent"?"❌":s.status==="late"?"🟡":"✅")+'</span>':'<span style="font-size:14px">⬜</span>';
+      }
+      return'<td style="padding:4px 3px">'+cell+'</td>';
+    }).join("")+
+    '<td><span style="font-weight:800;color:'+(pct>=80?"#22c55e":pct>=60?"#C8A94A":"#ef4444")+'">'+pct+'%</span></td></tr>';
   }).join("");
 }
 
