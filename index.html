@@ -785,7 +785,7 @@ function renderAtt(){
         const icon=s?(s.status==="absent"?"❌":s.status==="late"?"🟡":"✅"):"⬜";
         const time=s&&s.time&&s.time!=="Manual"?'<div style="font-size:9px;color:var(--muted)">'+s.time+'</div>':"";
         const btns='<div style="display:flex;gap:2px;justify-content:center;margin-top:2px">'+
-          ["present","late","absent"].map(st=>'<button onclick="markAtt(''+pid+'',''+d.date+'',''+st+'')" style="font-size:8px;padding:1px 4px;border-radius:3px;cursor:pointer;font-family:inherit;font-weight:700;border:1px solid '+SC[st]+';background:'+(s&&s.status===st?SC[st]+"44":"transparent")+';color:'+SC[st]+'">'+(st==="present"?"✓":st==="late"?"~":"✗")+'</button>').join("")+
+          ["present","late","absent"].map(st=>'<button onclick="markAtt(\''+pid+'\',\''+d.date+'\',\''+st+'\')" style="font-size:8px;padding:1px 4px;border-radius:3px;cursor:pointer;font-family:inherit;font-weight:700;border:1px solid '+SC[st]+';background:'+(s&&s.status===st?SC[st]+"44":"transparent")+';color:'+SC[st]+'">'+(st==="present"?"✓":st==="late"?"~":"✗")+'</button>').join("")+
           '</div>';
         cell='<div style="text-align:center"><div style="font-size:13px">'+icon+'</div>'+time+btns+'</div>';
       } else {
