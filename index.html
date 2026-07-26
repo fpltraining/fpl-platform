@@ -99,6 +99,64 @@ th{color:var(--muted);font-size:10px;font-weight:700}
 .bee{display:inline-block;animation:beebob .8s ease-in-out infinite alternate}
 @keyframes beebob{from{transform:translateY(0)}to{transform:translateY(-4px)}}
 .absence-badge{background:#ef444422;border:1px solid #ef4444;border-radius:6px;padding:3px 8px;font-size:10px;color:#ef4444;font-weight:700}
+/* ── ĐIỂM DANH: thẻ hôm nay ── */
+@keyframes attIn{from{opacity:0;transform:translateY(12px) scale(.95)}to{opacity:1;transform:none}}
+.att-card{position:relative;flex:1 1 138px;min-width:138px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0)),var(--mid);border-radius:16px;padding:15px 12px 13px;text-align:center;border:1px solid var(--bdr);overflow:hidden;transition:transform .16s ease,box-shadow .22s ease,border-color .22s ease}
+.att-card:hover{transform:translateY(-3px)}
+.att-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:transparent;transition:background .2s}
+.att-card.st-present{border-color:rgba(34,197,94,.5);box-shadow:0 0 0 1px rgba(34,197,94,.15),0 16px 34px -22px rgba(34,197,94,.95)}
+.att-card.st-present::before{background:linear-gradient(90deg,transparent,#22c55e,transparent)}
+.att-card.st-late{border-color:rgba(231,200,115,.5);box-shadow:0 0 0 1px rgba(231,200,115,.15),0 16px 34px -22px rgba(231,200,115,.95)}
+.att-card.st-late::before{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.att-card.st-absent{border-color:rgba(239,68,68,.5);box-shadow:0 0 0 1px rgba(239,68,68,.15),0 16px 34px -22px rgba(239,68,68,.95)}
+.att-card.st-absent::before{background:linear-gradient(90deg,transparent,#ef4444,transparent)}
+.att-card.st-none{border-style:dashed;border-color:#334159}
+.att-av-wrap{position:relative;width:56px;height:56px;margin:4px auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:29px;background:radial-gradient(circle at 50% 32%,rgba(255,255,255,.09),rgba(255,255,255,.01));border:2px solid var(--bdr);transition:border-color .2s,box-shadow .2s}
+.att-card.st-present .att-av-wrap{border-color:#22c55e;box-shadow:0 0 18px -5px rgba(34,197,94,.7)}
+.att-card.st-late .att-av-wrap{border-color:var(--gold);box-shadow:0 0 18px -5px rgba(231,200,115,.7)}
+.att-card.st-absent .att-av-wrap{border-color:#ef4444;box-shadow:0 0 18px -5px rgba(239,68,68,.7)}
+.att-nm{font-weight:800;font-size:13.5px;line-height:1.2}
+.att-pos{font-size:9px;letter-spacing:1.2px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:2px}
+.att-pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;padding:4px 11px;border-radius:20px;margin-top:9px;white-space:nowrap}
+.att-pill.p-present{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.4)}
+.att-pill.p-late{background:rgba(231,200,115,.15);color:var(--gold);border:1px solid rgba(231,200,115,.4)}
+.att-pill.p-absent{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.4)}
+.att-pill.p-none{background:rgba(255,255,255,.03);color:var(--muted);border:1px dashed var(--bdr)}
+.att-time{font-size:10px;color:var(--muted);margin-top:5px}
+.att-seg{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;border:1px solid var(--bdr);border-radius:11px;overflow:hidden;background:var(--dark)}
+.att-seg button{border:none;border-right:1px solid var(--bdr);padding:9px 0;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:var(--muted);transition:background .15s,color .15s,transform .1s}
+.att-seg button:last-child{border-right:none}
+.att-seg button:hover{background:rgba(255,255,255,.07);color:var(--txt)}
+.att-seg button:active{transform:scale(.9)}
+.att-seg button.on-present{background:var(--green);color:#04210f;text-shadow:0 1px 0 rgba(255,255,255,.25)}
+.att-seg button.on-late{background:var(--gold);color:#2a1e02;text-shadow:0 1px 0 rgba(255,255,255,.3)}
+.att-seg button.on-absent{background:var(--red);color:#fff}
+/* breakdown chips */
+.att-breakdown{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.att-bd{display:flex;align-items:center;gap:7px;background:var(--mid);border:1px solid var(--bdr);border-radius:11px;padding:7px 13px;font-size:11.5px;font-weight:700;color:var(--muted)}
+.att-bd-dot{width:9px;height:9px;border-radius:50%}
+.att-bd b{font-size:15px;font-weight:900;color:var(--txt)}
+/* progress summary */
+.att-prog{display:flex;align-items:center;gap:12px}
+.att-prog-track{flex:1;height:9px;background:var(--bdr);border-radius:5px;overflow:hidden}
+.att-prog-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--gold-2),var(--gold));box-shadow:0 0 10px -2px var(--gold);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.att-prog-lbl{font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap}
+.att-prog-lbl b{color:var(--gold);font-size:15px}
+/* weekly table */
+#att-tb tr{transition:background .15s}
+#att-tb tr:hover{background:rgba(255,255,255,.03)}
+.att-navatar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--mid);border:1px solid var(--bdr);font-size:14px;margin-right:8px;vertical-align:middle}
+.att-wchip{display:inline-flex;align-items:center;justify-content:center;width:31px;height:31px;border-radius:9px;font-size:15px;cursor:pointer;border:1px solid var(--bdr);background:rgba(255,255,255,.02);transition:transform .1s,background .15s,border-color .15s;user-select:none}
+.att-wchip:hover{transform:scale(1.1);border-color:var(--gold)}
+.att-wchip.w-empty{color:#54627d;font-weight:700}
+.att-wchip.w-present{background:rgba(34,197,94,.16);border-color:rgba(34,197,94,.5)}
+.att-wchip.w-late{background:rgba(231,200,115,.16);border-color:rgba(231,200,115,.5)}
+.att-wchip.w-absent{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.5)}
+.att-wtime{font-size:8px;color:var(--muted);margin-top:2px;line-height:1}
+.att-pct{display:inline-block;font-weight:900;font-size:12px;padding:4px 11px;border-radius:20px}
+.att-pct.hi{background:rgba(34,197,94,.15);color:#4ade80}
+.att-pct.mid{background:rgba(231,200,115,.15);color:var(--gold)}
+.att-pct.lo{background:rgba(239,68,68,.15);color:#f87171}
 .hero-stat-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .hero-stat-bar{flex:1;height:8px;background:var(--bdr);border-radius:4px;overflow:hidden}
 .hero-stat-fill{height:100%;border-radius:4px;transition:width .4s}
@@ -704,7 +762,7 @@ function gotoTab(id,btn){
   if(id==="herostats")renderHeroStats();
   if(id==="scrim")renderScrim();
   if(id==="training")renderTraining();
-  if(id==="attendance")renderAtt();
+  if(id==="attendance"){attAnim=true;renderAtt();}
 }
 
 // ══════════════════════════════════════════════════
@@ -884,14 +942,32 @@ function renderAtt(){
     myCard.innerHTML='<div class="flex"><span style="font-size:42px">'+CU.avatar+'</span><div style="flex:1"><div style="font-weight:900;font-size:16px">'+esc(CU.name)+'</div><div style="font-size:11px;color:var(--muted)">'+new Date().toLocaleDateString("vi-VN",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"})+'</div></div>'+(myS?'<div style="text-align:center">'+mkTag(SL[myS.status]||"OK",SC[myS.status]||"#22c55e")+'<div style="font-size:11px;color:#22c55e;margin-top:4px">'+myS.time+'</div></div>':'<button class="btn btn-green" onclick="doCheckIn()">👆 ĐIỂM DANH NGAY</button>')+'</div>';
   }else myCard.style.display="none";
   document.getElementById("att-today-title").textContent="📋 HÔM NAY — "+new Date().toLocaleDateString("vi-VN",{weekday:"long",day:"2-digit",month:"2-digit"});
-  document.getElementById("att-grid").innerHTML=actPIDS().map(pid=>{
+  document.getElementById("att-grid").innerHTML=actPIDS().map((pid,i)=>{
     const p=pInfo(pid);const s=DATA.attendance[td+"_"+pid];
-    const bc=s?SC[s.status]||"#22c55e":"var(--bdr)";
+    const st=s?s.status:"";
     const hasAbs=DATA.absences.some(a=>a.pid===pid&&a.date===td&&a.status==="approved");
-    const manBtns=isCoach?'<div style="display:flex;gap:3px;margin-top:8px;justify-content:center">'+["present","late","absent"].map(st=>'<button onclick="markAtt(\''+pid+'\',\''+td+'\',\''+st+'\')" style="font-size:9px;padding:2px 6px;border-radius:4px;cursor:pointer;font-family:inherit;font-weight:700;border:1px solid '+SC[st]+';background:'+(s&&s.status===st?SC[st]+"44":"transparent")+';color:'+SC[st]+'">'+(st==="present"?"✓":st==="late"?"~":"✗")+'</button>').join("")+'</div>':"";
-    return'<div class="player-chip" style="border-color:'+bc+'"><div style="font-size:26px;margin-bottom:4px">'+p.avatar+'</div><div style="font-weight:700;font-size:13px">'+esc(p.name)+'</div><div style="font-size:10px;color:var(--muted);margin-bottom:6px">'+p.pos+'</div>'+(hasAbs&&!s?'<span class="absence-badge">📩 Báo vắng</span>':"")+(s?mkTag(SL[s.status]||"OK",SC[s.status]||"#22c55e")+'<div style="font-size:10px;color:var(--muted);margin-top:3px">'+s.time+'</div>':(!hasAbs?'<span style="font-size:11px;color:var(--red)">⬜ Chưa điểm</span>':""))+manBtns+'</div>';
+    let pill,extra="";
+    if(s){pill='<span class="att-pill p-'+st+'">'+(SL[st]||"OK")+'</span>';extra='<div class="att-time">🕐 '+esc(s.time)+'</div>';}
+    else if(hasAbs)pill='<span class="att-pill p-none">📩 Đã báo vắng</span>';
+    else pill='<span class="att-pill p-none">⬜ Chưa điểm</span>';
+    const seg=isCoach?'<div class="att-seg">'+["present","late","absent"].map(k=>'<button class="'+(st===k?"on-"+k:"")+'" title="'+(k==="present"?"Có mặt":k==="late"?"Đi muộn":"Vắng")+'" onclick="markAtt(\''+pid+'\',\''+td+'\',\''+k+'\')">'+(k==="present"?"✓":k==="late"?"⏰":"✕")+'</button>').join("")+'</div>':"";
+    const anim=attAnim?' style="animation:attIn .4s ease both;animation-delay:'+(i*45)+'ms"':"";
+    return'<div class="att-card '+(s?"st-"+st:"st-none")+'"'+anim+'><div class="att-av-wrap">'+p.avatar+'</div><div class="att-nm">'+esc(p.name)+'</div><div class="att-pos">'+p.pos+'</div>'+pill+extra+seg+'</div>';
   }).join("");
-  document.getElementById("att-sum").textContent="Đã điểm: "+actPIDS().filter(pid=>{const s=DATA.attendance[td+"_"+pid];return s&&s.status!=="absent";}).length+" / "+actPIDS().length;
+  const AP=actPIDS();const cnt={present:0,late:0,absent:0,none:0};
+  AP.forEach(pid=>{const s=DATA.attendance[td+"_"+pid];if(s&&cnt[s.status]!=null)cnt[s.status]++;else if(!s)cnt.none++;});
+  const doneN=cnt.present+cnt.late;const totN=AP.length||1;const pctN=Math.round(doneN/totN*100);
+  document.getElementById("att-sum").innerHTML=
+    '<div class="att-breakdown">'+
+     '<div class="att-bd"><span class="att-bd-dot" style="background:#22c55e"></span>Có mặt <b>'+cnt.present+'</b></div>'+
+     '<div class="att-bd"><span class="att-bd-dot" style="background:#C8A94A"></span>Muộn <b>'+cnt.late+'</b></div>'+
+     '<div class="att-bd"><span class="att-bd-dot" style="background:#ef4444"></span>Vắng <b>'+cnt.absent+'</b></div>'+
+     '<div class="att-bd"><span class="att-bd-dot" style="background:#54627d"></span>Chưa điểm <b>'+cnt.none+'</b></div>'+
+    '</div>'+
+    '<div class="att-prog"><div class="att-prog-track"><div class="att-prog-fill" id="att-prog-fill" style="width:'+(attAnim?0:pctN)+'%"></div></div><div class="att-prog-lbl">Đã điểm <b>'+doneN+'</b> / '+totN+'</div></div>';
+  if(attAnim){requestAnimationFrame(()=>{const f=document.getElementById("att-prog-fill");if(f)f.style.width=pctN+"%";});}
+  attAnim=false;
+  _attDoneFlag=AP.length>0&&AP.every(pid=>DATA.attendance[td+"_"+pid]);
   const pa=document.getElementById("pending-absences");
   const pending=DATA.absences.filter(a=>a.status==="pending");
   if(isCoach&&pending.length)pa.innerHTML='<div class="card" style="border-color:#f9731644"><div class="ct" style="color:var(--orange)">📩 BÁO VẮNG CHỜ DUYỆT</div>'+pending.map(a=>{const p=pInfo(a.pid);return'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;background:var(--mid);border-radius:8px;padding:10px 12px"><span>'+p.avatar+'</span><div style="flex:1"><div style="font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--muted)">'+a.date+' · '+esc(a.reason)+'</div></div><button class="btn btn-green btn-sm" onclick="approveAbs(\''+a.id+'\')">✓</button><button class="btn btn-red btn-sm" onclick="rejectAbs(\''+a.id+'\')">✗</button></div>';}).join("")+'</div>';
@@ -905,7 +981,7 @@ function renderAtt(){
     const pres=wDays.filter(d=>{const r=DATA.attendance[d.date+"_"+pid];return r&&r.status!=="absent";}).length;
     const cnt=wDays.filter(d=>d.date<=td).length||1;
     const pct=Math.round(pres/cnt*100);
-    return'<tr><td><span style="margin-right:6px">'+p.avatar+'</span><span style="font-weight:700">'+esc(p.name)+'</span><span style="font-size:10px;color:var(--muted);margin-left:6px">'+p.pos+'</span></td>'+
+    return'<tr><td><span class="att-navatar">'+p.avatar+'</span><span style="font-weight:700">'+esc(p.name)+'</span><span style="font-size:10px;color:var(--muted);margin-left:6px">'+p.pos+'</span></td>'+
     wDays.map(d=>{
       const s=DATA.attendance[d.date+"_"+pid];
       const isFuture=d.date>td;
@@ -913,19 +989,17 @@ function renderAtt(){
       if(isFuture){
         cell='<span style="color:var(--bdr)">—</span>';
       } else if(isCoach){
-        // Coach: show status + mini buttons to fix
-        const icon=s?(s.status==="absent"?"❌":s.status==="late"?"🟡":"✅"):"⬜";
-        const time=s&&s.time&&s.time!=="Manual"?'<div style="font-size:9px;color:var(--muted)">'+s.time+'</div>':"";
-        const btns='<div style="display:flex;gap:2px;justify-content:center;margin-top:2px">'+
-          ["present","late","absent"].map(st=>'<button onclick="markAtt(\''+pid+'\',\''+d.date+'\',\''+st+'\')" style="font-size:8px;padding:1px 4px;border-radius:3px;cursor:pointer;font-family:inherit;font-weight:700;border:1px solid '+SC[st]+';background:'+(s&&s.status===st?SC[st]+"44":"transparent")+';color:'+SC[st]+'">'+(st==="present"?"✓":st==="late"?"~":"✗")+'</button>').join("")+
-          '</div>';
-        cell='<div style="text-align:center"><div style="font-size:13px">'+icon+'</div>'+time+btns+'</div>';
+        // Coach: một chip bấm để đổi trạng thái (Chưa → Có mặt → Muộn → Vắng)
+        const cls=s?"w-"+s.status:"w-empty";
+        const icon=s?(s.status==="absent"?"❌":s.status==="late"?"🟡":"✅"):"＋";
+        const time=s&&s.time&&s.time!=="Manual"?'<div class="att-wtime">'+esc(s.time)+'</div>':"";
+        cell='<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span class="att-wchip '+cls+'" title="Bấm để đổi trạng thái điểm danh" onclick="cycleAtt(\''+pid+'\',\''+d.date+'\')">'+icon+'</span>'+time+'</div>';
       } else {
         cell=s?'<span style="font-size:14px;color:'+(SC[s.status]||"#22c55e")+'">'+(s.status==="absent"?"❌":s.status==="late"?"🟡":"✅")+'</span>':'<span style="font-size:14px">⬜</span>';
       }
       return'<td style="padding:4px 3px">'+cell+'</td>';
     }).join("")+
-    '<td><span style="font-weight:800;color:'+(pct>=80?"#22c55e":pct>=60?"#C8A94A":"#ef4444")+'">'+pct+'%</span></td></tr>';
+    '<td><span class="att-pct '+(pct>=80?"hi":pct>=60?"mid":"lo")+'">'+pct+'%</span></td></tr>';
   }).join("");
 }
 
@@ -941,10 +1015,14 @@ function doCheckIn(){
   var time=now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
   DATA.attendance[key]={time,status};
   dSave("attendance",DATA.attendance,500);
-  renderAtt();renderDashboard();
+  _attCelebrate(td);renderAtt();renderDashboard();
   showToast(status==="late"?"⚠️ Điểm danh MUỘN! "+time:"✅ Đúng giờ! "+time,status==="late"?"#f97316":undefined);
 }
-function markAtt(pid,date,status){const key=date+"_"+pid;const cur=DATA.attendance[key];if(cur&&cur.status===status)delete DATA.attendance[key];else DATA.attendance[key]={time:"Manual",status};dSave("attendance",DATA.attendance,500);renderAtt();}
+function markAtt(pid,date,status){const key=date+"_"+pid;const cur=DATA.attendance[key];if(cur&&cur.status===status)delete DATA.attendance[key];else DATA.attendance[key]={time:"Manual",status};dSave("attendance",DATA.attendance,500);_attCelebrate(date);renderAtt();}
+function cycleAtt(pid,date){const key=date+"_"+pid;const cur=DATA.attendance[key];const order=["present","late","absent"];const nxt=order[(cur?order.indexOf(cur.status):-1)+1];if(nxt)DATA.attendance[key]={time:"Manual",status:nxt};else delete DATA.attendance[key];dSave("attendance",DATA.attendance,500);_attCelebrate(date);renderAtt();}
+var attAnim=false,_attDoneFlag=false;
+function _attCelebrate(date){var t=today();if(date&&date!==t)return;var ap=actPIDS();var done=ap.length>0&&ap.every(function(pid){return DATA.attendance[t+"_"+pid];});if(done&&!_attDoneFlag){attConfetti();showToast("🎉 Đã điểm danh đủ cả đội!","#22c55e");}}
+function attConfetti(){var c=document.createElement("canvas");c.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:600";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);var ctx=c.getContext("2d");var cols=["#E7C873","#22c55e","#3b82f6","#a855f7","#ef4444","#06b6d4"];var P=[];for(var i=0;i<100;i++)P.push({x:innerWidth/2+(Math.random()-.5)*180,y:innerHeight*.3,vx:(Math.random()-.5)*12,vy:Math.random()*-12-4,g:.28+Math.random()*.12,s:5+Math.random()*6,rot:Math.random()*6,vr:(Math.random()-.5)*.4,col:cols[i%cols.length]});var t0=performance.now();(function f(now){var dt=now-t0;ctx.clearRect(0,0,c.width,c.height);for(var j=0;j<P.length;j++){var p=P[j];p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;ctx.save();ctx.globalAlpha=Math.max(0,1-dt/1700);ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);ctx.restore();}if(dt<1700)requestAnimationFrame(f);else c.remove();})(t0);}
 function attNav(dir){attOff+=dir;renderAtt();}
 
 // ══════════════════════════════════════════════════
