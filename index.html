@@ -119,6 +119,28 @@ th{color:var(--muted);font-size:10px;font-weight:700}
 #sched-sheet input{background:#fff!important;color:#1e293b!important;border:none!important}
 #sched-sheet input[type=time]{color:#0f766e!important;font-weight:700}
 #sched-sheet input::placeholder{color:#94a3b8!important;opacity:1}
+/* ── MỨC ĐỘ TẬP LUYỆN: thanh kéo 1-10 ── */
+.tl-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.tl-grid{grid-template-columns:1fr}}
+.tl-role{background:var(--mid);border:1px solid var(--bdr);border-radius:13px;padding:13px 15px}
+.tl-role-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--bdr)}
+.tl-role-ic{font-size:18px}
+.tl-role-nm{font-weight:800;font-size:13px;color:var(--gold);letter-spacing:.3px}
+.tl-skill{margin-bottom:13px}
+.tl-skill:last-child{margin-bottom:0}
+.tl-skill-top{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin-bottom:6px}
+.tl-skill-name{font-size:11px;color:var(--txt);line-height:1.3}
+.tl-val{font-size:16px;font-weight:900;font-variant-numeric:tabular-nums;min-width:24px;text-align:right;line-height:1}
+.tl-range{-webkit-appearance:none;appearance:none;width:100%;height:9px;border-radius:8px;outline:none;padding:0;cursor:pointer;margin:2px 0}
+.tl-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:21px;height:21px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3d0,var(--gold) 45%,var(--gold-2));border:2px solid #0a0e16;box-shadow:0 2px 7px rgba(0,0,0,.55);cursor:pointer}
+.tl-range::-moz-range-thumb{width:19px;height:19px;border-radius:50%;background:var(--gold);border:2px solid #0a0e16;cursor:pointer}
+.tl-track{height:9px;border-radius:8px;background:#1c2740;overflow:hidden}
+.tl-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--gold-2),var(--gold))}
+/* ── THÀNH TÍCH ĐỘI ── */
+.ach-grid{display:flex;flex-direction:column;gap:10px}
+.ach-item{display:flex;align-items:center;gap:12px;background:var(--mid);border-radius:12px;padding:12px 14px;flex-wrap:wrap}
+.ach-cup{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ach-pill{display:inline-block;font-size:10px;font-weight:900;padding:3px 9px;border-radius:6px;letter-spacing:.5px}
 </style>
 </head>
 <body>
@@ -182,7 +204,6 @@ th{color:var(--muted);font-size:10px;font-weight:700}
     <button class="tab-btn" onclick="gotoTab('training',this)">🗡️ Luyện Tướng</button>
     <button class="tab-btn" onclick="gotoTab('schedule',this)">📅 Lịch Đội</button>
     <button class="tab-btn" onclick="gotoTab('scrim',this)">⚔️ Scrim</button>
-    <button class="tab-btn" onclick="gotoTab('performance',this)">⭐ Đánh Giá</button>
     <button class="tab-btn" onclick="gotoTab('herostats',this)">📊 Thống Kê Tướng</button>
     <button class="tab-btn" onclick="gotoTab('opponents',this)">🎯 Đối Thủ</button>
     <button class="tab-btn" onclick="gotoTab('ranking',this)">🏆 Bảng XH</button>
@@ -206,10 +227,7 @@ th{color:var(--muted);font-size:10px;font-weight:700}
       <input id="ann-inp" placeholder="📢 Thêm thông báo..." style="flex:1" onkeydown="if(event.key==='Enter')addAnn()">
       <button class="btn btn-gold" onclick="addAnn()">Đăng</button>
     </div>
-    <div id="coach-note-box" class="card" style="display:none">
-      <div class="ct" style="color:var(--blue)">📝 GHI CHÚ NGÀY</div>
-      <div class="flex"><input id="note-inp" placeholder="Nhận xét buổi tập hôm nay..." style="flex:1" onkeydown="if(event.key==='Enter')addNote()"><button class="btn btn-blue" onclick="addNote()">Lưu</button></div>
-    </div>
+    <div id="coach-note-box"></div>
     <div id="player-note-box"></div>
     <div id="my-stats-box"></div>
     <div class="card"><div class="ct">🏅 BẢNG CHUYÊN CẦN</div><div id="streak-board" class="flex"></div></div>
@@ -322,19 +340,6 @@ th{color:var(--muted);font-size:10px;font-weight:700}
     </div>
   </div>
 
-  <div id="page-performance" class="page">
-    <div class="flex" style="justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:13px;color:var(--gold);font-weight:700" id="perf-wk"></div>
-      <div class="flex">
-        <button class="btn btn-gray btn-sm" onclick="perfNav(-1)">◀</button>
-        <button class="btn btn-gold btn-sm" onclick="perfOff=0;renderPerf()">Tuần này</button>
-        <button class="btn btn-gray btn-sm" onclick="perfNav(1)">▶</button>
-        <button class="btn btn-purple btn-sm" onclick="exportPDF()">📄 PDF</button>
-      </div>
-    </div>
-    <div id="perf-list"></div>
-  </div>
-
   <div id="page-herostats" class="page">
     <div class="card">
       <div class="ct">📊 THỐNG KÊ TƯỚNG — DỰA TRÊN LỊCH TẬP</div>
@@ -357,7 +362,6 @@ th{color:var(--muted);font-size:10px;font-weight:700}
       <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
         <button class="btn btn-gold btn-sm" onclick="setRankTab('attendance',this)" id="rt-att">📋 Chuyên cần</button>
         <button class="btn btn-gray btn-sm" onclick="setRankTab('training',this)" id="rt-train">🗡️ Tập luyện</button>
-        <button class="btn btn-gray btn-sm" onclick="setRankTab('performance',this)" id="rt-perf">⭐ Điểm TB</button>
       </div>
       <div id="ranking-list"></div>
     </div>
@@ -470,6 +474,20 @@ const DEF_OPPS=["Flash Wolves","SGP","DCG","GAM","FS","ANK","SLX","BRU","FPT Fla
 const PIDS=["p1","p2","p3","p4","p5","p6","p7","p8","p9"];
 const FIXED={coach:{name:"Coach",pos:"Coach",avatar:"🎯",isCoach:true},manager:{name:"Quản Lý",pos:"Quản Lý",avatar:"👔",isManager:true},assist:{name:"Trợ Lý",pos:"Trợ Lý",avatar:"📋",isAssist:true},supv:{name:"Supv",pos:"Kiểm Soát Viên",avatar:"🔍",isSupv:true}};
 const DEF_PLAYERS={p1:{name:"OGUU",pos:"JUG",avatar:"🐷"},p2:{name:"Sleepy",pos:"MID",avatar:"🐱"},p3:{name:"ThanhDuy",pos:"ADL",avatar:"🏹"},p4:{name:"TheKhang",pos:"SUP",avatar:"🛡️"},p5:{name:"VIT",pos:"DSL",avatar:"🔥"},p6:{name:"TacK4",pos:"MID SUB",avatar:"⭐"},p7:{name:"Player 7",pos:"SUB",avatar:"🎮"},p8:{name:"Player 8",pos:"SUB",avatar:"🎮"},p9:{name:"Player 9",pos:"SUB",avatar:"🎮"}};
+// Vai trò + kỹ năng cho bảng MỨC ĐỘ TẬP LUYỆN (mỗi kỹ năng 1 thanh kéo 1-10)
+const ROLE_DEFS=[
+  {key:"solo",name:"Đường Tà Thần",icon:"⚔️",skills:["Đẩy lẻ, solo tốt","Chống chịu, càn lướt"]},
+  {key:"mid",name:"Đường Giữa",icon:"🔮",skills:["Dọn lính, đảo đường","Sát thương"]},
+  {key:"ad",name:"Đường Rồng",icon:"🏹",skills:["Giữ vị trí, đọc map","Sát thương"]},
+  {key:"jgTD",name:"Rừng — ThanhDuy",icon:"🌲",skills:["Kiểm soát mục tiêu, Smite","Call phối hợp, xử lí sight"]},
+  {key:"jgOG",name:"Rừng — Oguu",icon:"🌲",skills:["Kiểm soát mục tiêu, Smite","Call phối hợp, xử lí sight"]},
+  {key:"sp",name:"Trợ Thủ",icon:"🛡️",skills:["Kiểm soát tầm nhìn, mở giao tranh","Cover chủ lực, phối hợp"]}
+];
+// Màu cúp theo thứ hạng (top 1-8)
+const RANKS={
+  1:{c:"#FFD700",m:"🥇",t:"VÔ ĐỊCH"},2:{c:"#C0C0C0",m:"🥈",t:"Á QUÂN"},3:{c:"#CD7F32",m:"🥉",t:"HẠNG BA"},
+  4:{c:"#4EA1FF",m:"🏆",t:""},5:{c:"#22c55e",m:"🏆",t:""},6:{c:"#a855f7",m:"🏆",t:""},7:{c:"#f97316",m:"🏆",t:""},8:{c:"#94a3b8",m:"🏆",t:""}
+};
 const EVENT_COLORS={scrim:"#3b82f6",match:"#22c55e",training:"#f97316",meeting:"#a855f7",rest:"#3D5470"};
 const EVENT_LABELS={scrim:"⚔️ Scrim",match:"🏆 Thi đấu",training:"🗡️ Tập luyện",meeting:"💬 Họp đội",rest:"😴 Nghỉ"};
 function defCFG(){return{eventName:"APL 2026",eventDate:"2026-06-15",checkinTime:"08:30",heroes:DEF_HEROES.slice(),opponents:DEF_OPPS.slice(),passes:{coach:"fpl2026",manager:"mgr2026",assist:"ast2026",supv:"supv2026",p1:"fpl_p1",p2:"fpl_p2",p3:"fpl_p3",p4:"fpl_p4",p5:"fpl_p5",p6:"fpl_p6",p7:"fpl_p7",p8:"fpl_p8",p9:"fpl_p9"},disabled:{},players:Object.assign({},DEF_PLAYERS)};}
@@ -477,13 +495,16 @@ function defCFG(){return{eventName:"APL 2026",eventDate:"2026-06-15",checkinTime
 // ══════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════
-var CFG=defCFG(),DATA={attendance:{},scrims:[],weekTasks:{},performance:{},announcements:[],dailyNotes:[],coachPrivate:"",events:[],absences:[],oppNotes:{},journals:{}};
+var CFG=defCFG(),DATA={attendance:{},scrims:[],weekTasks:{},performance:{},announcements:[],dailyNotes:[],coachPrivate:"",events:[],absences:[],oppNotes:{},journals:{},trainLevels:{},achievements:[]};
 var CU=null,CID=null;
 var attOff=0,trainOff=0,perfOff=0;
 var calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
 var selDay=null;
 var saveQ={};
 var _lastEditAt=0;
+// True nếu người dùng đang gõ trong 1 ô nhập — dùng để hoãn việc tự vẽ lại,
+// tránh xóa mất ô đang điền dở (mục Luyện Tướng, Thống Kê Tướng, Lịch Đội).
+function _isEditing(){var a=document.activeElement;return !!(a&&(a.tagName==="INPUT"||a.tagName==="TEXTAREA"||a.tagName==="SELECT"));}
 
 // ══════════════════════════════════════════════════
 // UTILS
@@ -541,11 +562,13 @@ window.onload=async function(){
     var results=await Promise.all([
       dbGet("config"),dbGet("attendance"),dbGet("scrims"),dbGet("weekTasks"),
       dbGet("performance"),dbGet("announcements"),dbGet("dailyNotes"),dbGet("coachPrivate"),
-      dbGet("events"),dbGet("absences"),dbGet("oppNotes"),dbGet("journals")
+      dbGet("events"),dbGet("absences"),dbGet("oppNotes"),dbGet("journals"),
+      dbGet("trainLevels"),dbGet("achievements")
     ]);
     var cfg=results[0],att=results[1],sc=results[2],wt=results[3];
     var perf=results[4],anns=results[5],dn=results[6],cp=results[7];
     var ev=results[8],abs=results[9],oppN=results[10],jour=results[11];
+    var tl=results[12],ach=results[13];
     if(cfg)CFG=Object.assign(defCFG(),cfg);
     // Merge defaults for new player slots (p7/p8) so passwords/info exist even
     // if the saved config predates them. Existing edits are preserved.
@@ -564,6 +587,8 @@ window.onload=async function(){
     if(abs)DATA.absences=Array.isArray(abs)?abs:[];
     if(oppN)DATA.oppNotes=oppN;
     if(jour)DATA.journals=jour||{};
+    if(tl)DATA.trainLevels=tl||{};
+    if(ach)DATA.achievements=Array.isArray(ach)?ach:[];
   }catch(e){console.warn("Load error:",e);}
   document.getElementById("loading").style.display="none";
   buildLoginDropdown();
@@ -591,7 +616,7 @@ async function refreshData(){if(!CU)return;
   if(ae&&(ae.tagName==="INPUT"||ae.tagName==="TEXTAREA"||ae.tagName==="SELECT"))return;
   if(Date.now()-_lastEditAt<3000)return;
   try{
-  var rd=await Promise.all([dbGet("attendance"),dbGet("scrims"),dbGet("announcements"),dbGet("dailyNotes"),dbGet("events"),dbGet("absences"),dbGet("weekTasks")]);
+  var rd=await Promise.all([dbGet("attendance"),dbGet("scrims"),dbGet("announcements"),dbGet("dailyNotes"),dbGet("events"),dbGet("absences"),dbGet("weekTasks"),dbGet("trainLevels"),dbGet("achievements")]);
   if(rd[0])DATA.attendance=rd[0];
   if(rd[1])DATA.scrims=Array.isArray(rd[1])?rd[1]:[];
   if(rd[2])DATA.announcements=Array.isArray(rd[2])?rd[2]:[];
@@ -599,6 +624,8 @@ async function refreshData(){if(!CU)return;
   if(rd[4])DATA.events=Array.isArray(rd[4])?rd[4]:[];
   if(rd[5])DATA.absences=Array.isArray(rd[5])?rd[5]:[];
   if(rd[6])DATA.weekTasks=rd[6];
+  if(rd[7])DATA.trainLevels=rd[7]||{};
+  if(rd[8])DATA.achievements=Array.isArray(rd[8])?rd[8]:[];
   var pd=document.getElementById("page-dashboard");
   var pa=document.getElementById("page-attendance");
   var pt=document.getElementById("page-training");
@@ -676,7 +703,6 @@ function gotoTab(id,btn){
   if(id==="schedule")renderSchedule();
   if(id==="herostats")renderHeroStats();
   if(id==="scrim")renderScrim();
-  if(id==="performance")renderPerf();
   if(id==="training")renderTraining();
   if(id==="attendance")renderAtt();
 }
@@ -711,12 +737,8 @@ function renderDashboard(){
   const annInp=document.getElementById("ann-input");
   if(annInp)annInp.style.display=isCoach?"flex":"none";
   if(DATA.announcements.length){annBox.innerHTML='<div class="card" style="border-color:#C8A94A44"><div class="ct">📢 THÔNG BÁO ĐỘI</div>'+DATA.announcements.slice(0,4).map((a,i)=>{const del=isCoach?'<button class="btn btn-red btn-sm" onclick="delAnn('+i+')">✕</button>':"";return'<div class="ann-item"><div style="flex:1"><div style="font-size:13px">'+esc(a.text)+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+esc(a.author)+' · '+a.date+'</div></div>'+del+'</div>';}).join("")+'</div>';}else annBox.innerHTML="";
-  const cnb=document.getElementById("coach-note-box");
-  cnb.style.display=CU.isCoach?"block":"none";
-  const tnotes=DATA.dailyNotes.filter(n=>n.date===td).slice(0,3);
-  const pnb=document.getElementById("player-note-box");
-  if(!CU.isCoach&&tnotes.length)pnb.innerHTML='<div class="card" style="border-color:#3b82f633"><div class="ct" style="color:var(--blue)">📝 GHI CHÚ TỪ COACH HÔM NAY</div>'+tnotes.map(n=>'<div style="font-size:13px;padding:8px 12px;background:var(--mid);border-radius:7px;margin-bottom:6px;border-left:3px solid #3b82f6">'+esc(n.text)+'</div>').join("")+'</div>';
-  else pnb.innerHTML="";
+  document.getElementById("coach-note-box").innerHTML=renderTrainLevelsHTML();
+  document.getElementById("player-note-box").innerHTML="";
   const msb=document.getElementById("my-stats-box");
   if(!CU.isCoach&&!CU.isAssist&&!CU.isManager){
     const wD=Array.from({length:7},(_,i)=>{const d=new Date(wk);d.setDate(d.getDate()+i);return d.toISOString().slice(0,10);});
@@ -742,15 +764,79 @@ function renderDashboard(){
       '<div style="font-size:10px;color:var(--muted)">streak</div>'+
       '<div style="margin-top:5px;font-size:11px;color:'+(pct>=80?"#22c55e":pct>=60?"#C8A94A":"#ef4444")+';font-weight:700">'+pct+'% tuần</div></div>';
   }).join("");
-  const cpb=document.getElementById("coach-private-box");
-  if(CU.isCoach)cpb.innerHTML='<div class="card" style="border-color:#a855f755"><div class="ct" style="color:var(--purple)">🔒 GHI CHÚ NỘI BỘ COACH</div><textarea id="cp-ta" style="min-height:120px" placeholder="Kế hoạch BP, nhận xét riêng..." oninput="DATA.coachPrivate=this.value;dSave(\'coachPrivate\',this.value,2000)">'+esc(DATA.coachPrivate)+'</textarea></div>';
-  else cpb.innerHTML="";
+  document.getElementById("coach-private-box").innerHTML=renderAchievementsHTML();
 }
 function mStat(v,l,c){return'<div style="background:var(--dark);border:1px solid '+c+'33;border-radius:10px;padding:10px 14px;text-align:center;min-width:88px"><div style="font-size:17px;font-weight:900;color:'+c+'">'+v+'</div><div style="font-size:9px;color:var(--muted);letter-spacing:1.5px">'+l+'</div></div>';}
 function mCard(l,v,c){return'<div style="background:var(--mid);border:1px solid '+c+'22;border-radius:10px;padding:12px 8px;text-align:center"><div style="font-size:22px;font-weight:900;color:'+c+'">'+v+'</div><div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:2px">'+l+'</div></div>';}
 function addAnn(){const inp=document.getElementById("ann-inp");if(!inp.value.trim())return;DATA.announcements.unshift({text:inp.value,date:today(),author:CU.name});inp.value="";dSave("announcements",DATA.announcements,500);renderDashboard();}
 function delAnn(i){DATA.announcements.splice(i,1);dSave("announcements",DATA.announcements,500);renderDashboard();}
-function addNote(){const inp=document.getElementById("note-inp");if(!inp.value.trim())return;DATA.dailyNotes.unshift({text:inp.value,date:today(),author:CU.name});inp.value="";dSave("dailyNotes",DATA.dailyNotes,500);renderDashboard();}
+function addNote(){const inp=document.getElementById("note-inp");if(!inp||!inp.value.trim())return;DATA.dailyNotes.unshift({text:inp.value,date:today(),author:CU.name});inp.value="";dSave("dailyNotes",DATA.dailyNotes,500);renderDashboard();}
+
+// ══════════════════════════════════════════════════
+// MỨC ĐỘ TẬP LUYỆN (thanh kéo 1-10, chỉ Coach chấm)
+// ══════════════════════════════════════════════════
+function tlBg(v){var p=v*10;return"linear-gradient(90deg,var(--gold-2) 0%,var(--gold) "+p+"%,#1c2740 "+p+"%,#1c2740 100%)";}
+function tlColor(v){return v>=8?"#22c55e":v>=5?"var(--gold)":v>=1?"#f97316":"var(--muted)";}
+function renderTrainLevelsHTML(){
+  var isCoach=CU.isCoach||CU.isManager;
+  var rows=ROLE_DEFS.map(function(r){
+    var skills=r.skills.map(function(sk,si){
+      var key=r.key+"-"+si;
+      var raw=DATA.trainLevels[key];
+      var v=(raw===undefined||raw===null||raw==="")?0:parseInt(raw);
+      var ctl=isCoach
+        ?'<input type="range" class="tl-range" min="0" max="10" step="1" value="'+v+'" style="background:'+tlBg(v)+'" oninput="updateTL(\''+key+'\',this.value,this)">'
+        :'<div class="tl-track"><div class="tl-fill" style="width:'+(v*10)+'%"></div></div>';
+      return '<div class="tl-skill"><div class="tl-skill-top"><span class="tl-skill-name">'+esc(sk)+'</span><span class="tl-val" style="color:'+tlColor(v)+'">'+(v?v:"—")+'</span></div>'+ctl+'</div>';
+    }).join("");
+    return '<div class="tl-role"><div class="tl-role-hd"><span class="tl-role-ic">'+r.icon+'</span><span class="tl-role-nm">'+esc(r.name)+'</span></div>'+skills+'</div>';
+  }).join("");
+  return '<div class="card"><div class="ct">🎚️ MỨC ĐỘ TẬP LUYỆN</div>'+(isCoach?'<div style="font-size:11px;color:var(--muted);margin:-6px 0 14px">Kéo thanh 1–10 để chấm mức độ luyện tập từng kỹ năng.</div>':'')+'<div class="tl-grid">'+rows+'</div></div>';
+}
+function updateTL(key,val,el){
+  var v=parseInt(val);
+  DATA.trainLevels[key]=v;
+  if(el){el.style.background=tlBg(v);var b=el.parentElement.querySelector(".tl-val");if(b){b.textContent=v?v:"—";b.style.color=tlColor(v);}}
+  dSave("trainLevels",DATA.trainLevels,600);
+}
+
+// ══════════════════════════════════════════════════
+// THÀNH TÍCH ĐỘI (Coach tự thêm mùa giải + thứ hạng)
+// ══════════════════════════════════════════════════
+function renderAchievementsHTML(){
+  var isCoach=CU.isCoach||CU.isManager;
+  var list=DATA.achievements||[];
+  var items=list.map(function(a){
+    var r=RANKS[a.rank]||RANKS[8];
+    var season=isCoach
+      ?'<input value="'+esc(a.season||"")+'" onchange="updateAch(\''+a.id+'\',\'season\',this.value)" placeholder="Tên mùa giải..." style="font-weight:700;font-size:14px;background:transparent;border:none;padding:2px 0">'
+      :'<div style="font-weight:800;font-size:14px">'+esc(a.season||"—")+'</div>';
+    var rankSel=isCoach
+      ?'<select onchange="updateAch(\''+a.id+'\',\'rank\',this.value)" style="width:auto;font-size:11px;padding:5px 6px">'+[1,2,3,4,5,6,7,8].map(function(n){return '<option value="'+n+'"'+(String(a.rank)===String(n)?' selected':'')+'>TOP '+n+'</option>';}).join("")+'</select>':'';
+    var del=isCoach?'<button class="btn btn-red btn-sm" onclick="delAch(\''+a.id+'\')">🗑</button>':'';
+    return '<div class="ach-item" style="border-left:4px solid '+r.c+'"><div class="ach-cup" style="background:'+r.c+'22;border:1px solid '+r.c+'66"><span style="font-size:26px">'+r.m+'</span></div><div style="flex:1;min-width:130px">'+season+'<div style="margin-top:5px"><span class="ach-pill" style="background:'+r.c+'22;color:'+r.c+';border:1px solid '+r.c+'">TOP '+a.rank+(r.t?' · '+r.t:'')+'</span></div></div>'+(isCoach?'<div class="flex" style="gap:6px">'+rankSel+del+'</div>':'')+'</div>';
+  }).join("");
+  var addForm=isCoach?'<div class="flex" style="gap:8px;margin-top:14px"><input id="ach-season" placeholder="Tên mùa giải (VD: APL 2025)..." style="flex:1;min-width:140px" onkeydown="if(event.key===\'Enter\')addAch()"><select id="ach-rank" style="width:auto">'+[1,2,3,4,5,6,7,8].map(function(n){return '<option value="'+n+'">TOP '+n+'</option>';}).join("")+'</select><button class="btn btn-gold" onclick="addAch()">+ Thêm</button></div>':'';
+  return '<div class="card"><div class="ct">🏆 THÀNH TÍCH ĐỘI</div>'+(list.length?'<div class="ach-grid">'+items+'</div>':'<div class="empty" style="padding:14px 0;font-size:12px">'+(isCoach?"Chưa có thành tích — thêm mùa giải đầu tiên!":"Chưa có thành tích.")+'</div>')+addForm+'</div>';
+}
+function addAch(){
+  var s=document.getElementById("ach-season"),r=document.getElementById("ach-rank");
+  if(!s||!s.value.trim()){showToast("Nhập tên mùa giải!","#ef4444");return;}
+  DATA.achievements.unshift({id:String(Date.now()),season:s.value.trim(),rank:parseInt(r.value)});
+  dSaveNow("achievements",DATA.achievements);renderDashboard();showToast("🏆 Đã thêm thành tích!");
+}
+function updateAch(id,field,val){
+  var i=DATA.achievements.findIndex(function(a){return String(a.id)===String(id);});
+  if(i<0)return;
+  DATA.achievements[i][field]=field==="rank"?parseInt(val):val;
+  dSave("achievements",DATA.achievements,500);
+  if(field==="rank")renderDashboard();
+}
+function delAch(id){
+  if(!confirm("Xóa thành tích này?"))return;
+  DATA.achievements=DATA.achievements.filter(function(a){return String(a.id)!==String(id);});
+  dSaveNow("achievements",DATA.achievements);renderDashboard();
+}
 
 // ══════════════════════════════════════════════════
 // ABSENCE
@@ -889,7 +975,7 @@ function mkHS(id,val,pid,idx){return'<div class="hs-wrap"><input id="inp-'+id+'"
 function fHS(id){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(!inp||!dd)return;const q=inp.value.toLowerCase();const heroes=CFG.heroes||DEF_HEROES;const fil=q?heroes.filter(h=>h.toLowerCase().includes(q)):heroes;dd.onmousedown=function(e){e.preventDefault();};dd.innerHTML=fil.map(h=>'<div class="hs-opt" onmousedown="sHS(\''+id+'\',\''+esc(h)+'\')">'+esc(h)+'</div>').join("");dd.classList.add("open");}
 function sHS(id,hero){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(inp)inp.value=hero;if(dd){dd.classList.remove("open");const pid=dd.dataset.pid;const idx=dd.dataset.idx;if(pid&&idx!=null){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};if(!DATA.weekTasks[vw][pid][idx])DATA.weekTasks[vw][pid][idx]={};DATA.weekTasks[vw][pid][idx].hero=hero;dSaveNow("weekTasks",DATA.weekTasks);}}}
 function cHS(id){document.getElementById("dd-"+id)?.classList.remove("open");}
-function saveTaskF(pid,idx,field,val){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};if(!DATA.weekTasks[vw][pid][idx])DATA.weekTasks[vw][pid][idx]={};DATA.weekTasks[vw][pid][idx][field]=val;dSaveNow("weekTasks",DATA.weekTasks);if(field==="played")setTimeout(renderTraining,500);}
+function saveTaskF(pid,idx,field,val){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};if(!DATA.weekTasks[vw][pid][idx])DATA.weekTasks[vw][pid][idx]={};DATA.weekTasks[vw][pid][idx][field]=val;dSaveNow("weekTasks",DATA.weekTasks);if(field==="played")setTimeout(function(){if(!_isEditing())renderTraining();},600);}
 function addTask(pid){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};const existing=Object.keys(DATA.weekTasks[vw][pid]).length;if(existing>=15){showToast("Tối đa 15 tướng mỗi người!","#f97316");return;}const idx=Date.now();DATA.weekTasks[vw][pid][idx]={hero:"",required:"",played:""};dSaveNow("weekTasks",DATA.weekTasks);renderTraining();}
 function removeTask(pid,idx){const vw=wkS(trainOff);if(DATA.weekTasks[vw]?.[pid])delete DATA.weekTasks[vw][pid][idx];dSaveNow("weekTasks",DATA.weekTasks);renderTraining();}
 function copyPrevTask(pid){const vw=wkS(trainOff);const pv=wkS(trainOff-1);const prev=DATA.weekTasks[pv]?.[pid];if(!prev){showToast("Không có dữ liệu tuần trước!","#ef4444");return;}if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};const fresh={};Object.values(prev).forEach((t,i)=>fresh[i]={...t,played:""});DATA.weekTasks[vw][pid]=fresh;dSaveNow("weekTasks",DATA.weekTasks);renderTraining();}
@@ -1062,7 +1148,7 @@ function quickSaveCell(date,field,val){
   if(ei>=0)DATA.events[ei]=entry;else DATA.events.push(entry);
   DATA.events.sort(function(a,b){return a.date.localeCompare(b.date)||((a.time||"").localeCompare(b.time||""));});
   dSaveNow("events",DATA.events);
-  setTimeout(renderSchedule,300);
+  setTimeout(function(){if(!_isEditing())renderSchedule();},600);
 }
 
 // Update existing event field inline
@@ -1240,9 +1326,6 @@ function exportPDF(){
   if(!thisW.length)html+='<div style="color:#3D5470;font-size:12px">Chưa có scrim tuần này.</div>';
   else html+=thisW.map(s=>'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><div style="flex:1">'+esc(s.opponent)+' ('+s.format+')</div><div style="font-weight:900;color:'+rc(s.result)+'">'+(s.wins||0)+' – '+(s.losses||0)+' '+s.result+'</div></div>').join("");
   html+='</div>';
-  const perfWk=DATA.performance[wk]||{};
-  html+='<div><div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#C8A94A;border-bottom:1px solid #1A2E48;padding-bottom:6px">⭐ ĐÁNH GIÁ HIỆU SUẤT</div>';
-  html+=actPIDS().map(pid=>{const p=pInfo(pid);const pd=perfWk[pid]||{};const sc=[pd.mechanics,pd.macro,pd.mental].filter(Boolean).map(Number);const avg=sc.length===3?Math.round(sc.reduce((a,b)=>a+b,0)/3*10)/10:"—";return'<div style="margin-bottom:10px"><div style="font-weight:700">'+p.avatar+' '+p.name+'</div><div style="display:flex;gap:16px;font-size:12px;color:#3D5470"><span>Tay To: <strong>'+(pd.mechanics||"—")+'</strong></span><span>Đọc Trận Đấu: <strong>'+(pd.macro||"—")+'</strong></span><span>Tâm Lý Chiến: <strong>'+(pd.mental||"—")+'</strong></span><span style="color:#C8A94A;font-weight:700">TB: '+avg+'</span></div>'+(pd.comment?'<div style="font-size:11px;color:#64748b;margin-top:2px">Coach: '+esc(pd.comment)+'</div>':"")+' </div>';}).join("")+'</div>';
   document.getElementById("pdf-body").innerHTML=html;
   openModal("pdf-modal");
 }
@@ -1317,14 +1400,14 @@ function updateHeroPlayed(pid,taskIdx,val){
   if(!DATA.weekTasks[vw]||!DATA.weekTasks[vw][pid]||!DATA.weekTasks[vw][pid][taskIdx])return;
   DATA.weekTasks[vw][pid][taskIdx].played=val;
   dSaveNow("weekTasks",DATA.weekTasks);
-  setTimeout(renderHeroStats,300);
+  setTimeout(function(){if(!_isEditing())renderHeroStats();},600);
 }
 function updateHeroRequired(pid,taskIdx,val){
   const vw=wkS(0);
   if(!DATA.weekTasks[vw]||!DATA.weekTasks[vw][pid]||!DATA.weekTasks[vw][pid][taskIdx])return;
   DATA.weekTasks[vw][pid][taskIdx].required=val;
   dSaveNow("weekTasks",DATA.weekTasks);
-  setTimeout(renderHeroStats,300);
+  setTimeout(function(){if(!_isEditing())renderHeroStats();},600);
 }
 
 // ══════════════════════════════════════════════════
@@ -1377,14 +1460,17 @@ function saveConfig(){
   _cfgToastT=setTimeout(function(){showToast("✅ Đã lưu tên giải & ngày thi đấu!");},900);
 }
 function saveCfg(){CFG.checkinTime=document.getElementById("cfg-checkin").value||"08:30";dSave("config",CFG,500);showToast("✅ Đã lưu giờ điểm danh!");}
+// Loại ký tự HTML nguy hiểm khỏi vị trí & icon (2 chỗ được chèn thẳng vào HTML)
+// để tránh vỡ giao diện hoặc chèn mã khi nhập nhầm ký tự lạ.
+function sanIcon(s){return String(s||"").replace(/[<>&"']/g,"").trim();}
 function saveAllPlayers(){
   if(!CFG.players)CFG.players={};
   PIDS.forEach(function(pid){
     const nameEl=document.getElementById("pe-name-"+pid);const posEl=document.getElementById("pe-pos-"+pid);const avEl=document.getElementById("pe-av-"+pid);
     if(!CFG.players[pid])CFG.players[pid]=Object.assign({},DEF_PLAYERS[pid]||{});
     if(nameEl&&nameEl.value.trim())CFG.players[pid].name=nameEl.value.trim();
-    if(posEl&&posEl.value.trim())CFG.players[pid].pos=posEl.value.trim();
-    if(avEl&&avEl.value.trim())CFG.players[pid].avatar=avEl.value.trim();
+    if(posEl&&sanIcon(posEl.value))CFG.players[pid].pos=sanIcon(posEl.value);
+    if(avEl&&sanIcon(avEl.value))CFG.players[pid].avatar=sanIcon(avEl.value);
   });
   dSaveNow("config",CFG);buildLoginDropdown();showToast("✅ Đã lưu tên tuyển thủ!");
 }
