@@ -300,6 +300,49 @@ th{color:var(--muted);font-size:10px;font-weight:700}
 .rw-locked{margin-top:12px;font-size:10.5px;font-weight:700;color:var(--muted);padding:9px;border:1px dashed var(--bdr);border-radius:10px}
 .rw-me{display:flex;align-items:center;gap:14px;background:var(--mid);border:1px solid var(--bdr);border-radius:13px;padding:14px 16px}
 .rw-me-rank{font-size:26px;font-weight:900;color:var(--gold);min-width:44px;text-align:center}
+/* ── trọng số tính điểm ── */
+.rw-weights{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.rw-wt{display:inline-flex;align-items:center;gap:6px;background:var(--mid);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px;font-size:10.5px;color:var(--muted);font-weight:700}
+.rw-wt i{width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:0 0 8px -1px var(--c)}
+.rw-wt b{color:var(--txt);font-size:12px;font-weight:900}
+/* ── khối "hạng của bạn" ── */
+.rw-hero{display:grid;grid-template-columns:186px 1fr;gap:18px;align-items:start}
+@media(max-width:620px){.rw-hero{grid-template-columns:1fr}}
+.rw-panel{background:linear-gradient(180deg,rgba(255,255,255,.035),transparent),var(--mid);border:1px solid var(--bdr);border-radius:16px;padding:16px 18px}
+.rw-phd{display:flex;align-items:center;gap:13px;margin-bottom:15px}
+.rw-bigrank{position:relative;width:56px;height:56px;flex:0 0 auto;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,rgba(231,200,115,.22),rgba(231,200,115,.05));border:1.5px solid rgba(231,200,115,.5)}
+.rw-bigrank b{font-size:23px;font-weight:900;color:var(--gold);line-height:1}
+.rw-bigrank span{font-size:7.5px;letter-spacing:1.3px;color:var(--muted);font-weight:800;margin-top:2px}
+.rw-bigrank.top2{background:linear-gradient(150deg,rgba(34,197,94,.24),rgba(34,197,94,.05));border-color:rgba(34,197,94,.6)}
+.rw-bigrank.top2 b{color:#4ade80}
+.rw-score{margin-left:auto;text-align:right}
+.rw-score b{font-size:30px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.rw-score span{display:block;font-size:8.5px;letter-spacing:1.6px;color:var(--muted);font-weight:800;margin-top:3px}
+/* dòng thành phần điểm */
+.rw-st{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.rw-st-nm{width:112px;flex:0 0 auto;font-size:10.5px;color:var(--muted);font-weight:700}
+.rw-st-bar{flex:1;height:7px;background:var(--dark);border-radius:4px;overflow:hidden;border:1px solid var(--bdr)}
+.rw-st-fill{height:100%;border-radius:4px;width:0;background:var(--c);box-shadow:0 0 9px -2px var(--c);transition:width 1.1s cubic-bezier(.34,.02,.28,1)}
+.rw-st-v{width:38px;flex:0 0 auto;text-align:right;font-size:11px;font-weight:900;font-variant-numeric:tabular-nums}
+/* mục tiêu */
+.rw-goal{display:flex;align-items:center;gap:10px;margin-top:14px;padding:11px 14px;border-radius:12px;font-size:11.5px;font-weight:700;line-height:1.5}
+.rw-goal.g-need{background:rgba(231,200,115,.09);border:1px solid rgba(231,200,115,.3);color:var(--gold)}
+.rw-goal.g-in{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);color:#4ade80}
+.rw-goal-ic{font-size:19px;line-height:1}
+/* ── thẻ xem trước bị khóa ── */
+.rw-prev{position:relative;border-radius:16px;overflow:hidden}
+.rw-prev.locked .rw-card{filter:grayscale(.9) brightness(.5) contrast(.9);pointer-events:none}
+.rw-prev.locked .rw-card:hover{transform:none}
+.rw-lockov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  background:radial-gradient(circle at 50% 42%,rgba(10,14,22,.35),rgba(10,14,22,.82));border-radius:16px;pointer-events:none;z-index:3}
+.rw-lockic{font-size:34px;filter:drop-shadow(0 5px 14px rgba(0,0,0,.95));animation:rwLock 2.6s ease-in-out infinite}
+@keyframes rwLock{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(-4deg)}}
+.rw-lockmsg{font-size:9.5px;font-weight:900;letter-spacing:1.2px;color:#cbd5e1;text-transform:uppercase;text-align:center;padding:0 12px;line-height:1.5;text-shadow:0 2px 6px #000}
+/* nút nhận bị mờ */
+.rw-btn.rw-off{background:linear-gradient(135deg,#3a4356,#2a3140)!important;color:#7b8798!important;box-shadow:none!important;cursor:not-allowed}
+.rw-btn.rw-off:hover{filter:none;transform:none}
+.rw-prevcap{text-align:center;font-size:9.5px;color:var(--muted);font-weight:800;letter-spacing:1.1px;margin-top:9px;text-transform:uppercase}
 .rw-owner{background:var(--dark);border:1px solid var(--bdr);border-radius:14px;padding:10px}
 .rw-owner-hd{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .hero-stat-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
@@ -486,6 +529,7 @@ th{color:var(--muted);font-size:10px;font-weight:700}
         <button class="btn btn-gray btn-sm" onclick="trainNav(1)">▶</button>
       </div>
     </div>
+    <div id="rewards-box"></div>
     <div class="card">
       <div class="ct">🏁 ĐUA SỐ GAME — CẢ ĐỘI</div>
       <div class="rc-tabs">
@@ -495,7 +539,6 @@ th{color:var(--muted);font-size:10px;font-weight:700}
       <div id="race-board"></div>
     </div>
     <div id="training-list"></div>
-    <div id="rewards-box"></div>
   </div>
 
   <div id="page-schedule" class="page">
@@ -1213,7 +1256,8 @@ function rewardRank(mk){
   rows.forEach(function(r){
     var gp=maxG>0?r.games/maxG*100:0;
     var lv=r.lvl===null?0:r.lvl*10;
-    r.score=Math.round(gp*0.30+r.trainPct*0.30+r.attPct*0.25+lv*0.15);
+    // Trọng số: mức độ tập luyện 40% · số game 30% · luyện tướng 20% · điểm danh 10%
+    r.score=Math.round(lv*0.40+gp*0.30+r.trainPct*0.20+r.attPct*0.10);
   });
   rows.sort(function(a,b){return b.score-a.score||b.games-a.games;});
   return rows;
@@ -1359,6 +1403,34 @@ function rewardCardHTML(r,showClaim){
     '<div class="rw-rs">'+esc(r.reason||"")+'</div>'+
     '<div class="rw-mt">'+monLabel(r.month)+'</div>'+btn+'</div>';
 }
+// Một dòng thành phần điểm: tên · trọng số · thanh · giá trị
+function stRow(name,w,val,col){
+  var v=Math.max(0,Math.min(100,Math.round(val||0)));
+  return'<div class="rw-st"><div class="rw-st-nm">'+name+' <span style="color:'+col+'">'+w+'</span></div>'+
+    '<div class="rw-st-bar"><div class="rw-st-fill" data-w="'+v+'" style="--c:'+col+'"></div></div>'+
+    '<div class="rw-st-v" style="color:'+col+'">'+v+'</div></div>';
+}
+// Thẻ xem trước cho học trò: giống thẻ thật nhưng nút nhận bị mờ khi chưa đủ điều kiện.
+function previewCardHTML(rank,mk,unlocked,earned){
+  if(earned)return rewardCardHTML(earned,true);      // đã có thẻ thật thì hiện thẻ thật
+  var fake={id:"preview",pid:CID,type:"green",rank:rank||1,month:mk,
+            reason:rank===2?"Top 2 chuyên cần & luyện tập":"Top 1 chuyên cần & luyện tập"};
+  var tier=fake.rank===1?"rw-green rw-gold":"rw-green rw-silver";
+  var rare=fake.rank===1?"★ Huyền thoại ★":"★ Tinh anh ★";
+  var icon=fake.rank===1?"🏆":"🎁";
+  var btn=unlocked
+    ?'<div class="rw-locked">⏳ Chờ Coach chốt bảng cuối tháng</div>'
+    :'<button class="rw-btn rw-off" disabled title="Vào Top 2 mới nhận được">🎁 NHẬN THƯỞNG</button>';
+  return'<div class="rw-card '+tier+(unlocked?" rw-live":"")+'">'+
+    '<div class="rw-holo"></div><div class="rw-shine"></div>'+
+    '<span class="rw-corner c1">◆</span><span class="rw-corner c2">◆</span>'+
+    '<span class="rw-corner c3">◆</span><span class="rw-corner c4">◆</span>'+
+    '<div class="rw-rare">'+rare+'</div>'+
+    '<div class="rw-ic">'+icon+'</div>'+
+    '<div class="rw-ttl">THẺ THƯỞNG XANH</div>'+
+    '<div class="rw-rs">'+esc(fake.reason)+'</div>'+
+    '<div class="rw-mt">'+monLabel(mk)+'</div>'+btn+'</div>';
+}
 function renderRewardsHTML(){
   var canAward=CU.isCoach||CU.isManager;           // chỉ Coach/Quản lý được trao thẻ
   var isStaff=canAward||CU.isAssist||CU.isSupv;    // Trợ lý/Supv xem được bảng nhưng không trao
@@ -1368,7 +1440,12 @@ function renderRewardsHTML(){
     '<div class="ct" style="color:var(--green);margin:0">🎁 ĐỔI THƯỞNG — '+monLabel(mk).toUpperCase()+'</div>'+
     (canAward?'<div style="display:flex;gap:6px"><button class="btn btn-green btn-sm" onclick="awardGreen(\''+mk+'\')">🎁 Trao thẻ xanh Top 2</button><button class="btn btn-red btn-sm" onclick="openRedAward()">🔥 Trao thẻ đỏ</button></div>':'')+
     '</div>'+
-    '<div style="font-size:11px;color:var(--muted);margin-bottom:14px">Xếp hạng theo: số game đã chơi (30%) · hoàn thành luyện tướng (30%) · điểm danh (25%) · mức độ tập luyện (15%).</div>';
+    '<div class="rw-weights">'+
+      '<span class="rw-wt"><i style="--c:#a855f7"></i>Mức độ tập luyện <b>40%</b></span>'+
+      '<span class="rw-wt"><i style="--c:#E7C873"></i>Số game đã chơi <b>30%</b></span>'+
+      '<span class="rw-wt"><i style="--c:#06b6d4"></i>Hoàn thành luyện tướng <b>20%</b></span>'+
+      '<span class="rw-wt"><i style="--c:#22c55e"></i>Điểm danh <b>10%</b></span>'+
+    '</div>';
   if(isStaff){
     h+='<div style="overflow-x:auto"><table><thead><tr><th style="text-align:left;padding:7px 12px">Tuyển thủ</th><th>Game</th><th>Luyện tướng</th><th>Điểm danh</th><th>Mức tập</th><th>Tổng điểm</th><th>Thẻ</th></tr></thead><tbody>'+
       rows.map(function(r,i){
@@ -1388,15 +1465,44 @@ function renderRewardsHTML(){
         return'<div class="rw-owner"><div class="rw-owner-hd"><span class="att-navatar">'+p.avatar+'</span><span style="font-weight:700;font-size:12px">'+esc(p.name)+'</span>'+(canAward?'<button class="btn btn-red btn-sm" style="margin-left:auto" onclick="delReward(\''+r.id+'\')">✕</button>':'<span style="margin-left:auto;font-size:10px;color:var(--muted)">'+(r.claimed?"đã nhận":"chưa nhận")+'</span>')+'</div>'+rewardCardHTML(r,false)+'</div>';
       }).join("")+'</div>':'<div class="empty" style="padding:14px 0">Chưa trao thẻ thưởng nào</div>')+'</div>';
   }else{
-    // Học trò: chỉ thấy phần của mình, và chỉ khi đủ điều kiện (có thẻ) mới hiện thẻ.
+    // Học trò: xem hạng của mình + thẻ xem trước (mờ & khóa cho tới khi vào Top 2).
     var me=rows.filter(function(r){return r.pid===CID;})[0];
     var myPos=rows.map(function(r){return r.pid;}).indexOf(CID)+1;
     var mine=myRewards(CID);
+    var earned=findReward(CID,"green",mk);           // đã được trao thẻ tháng này chưa
+    var inTop2=myPos>0&&myPos<=2;
+    var maxG2=Math.max.apply(null,rows.map(function(r){return r.games;}).concat([0]));
     if(me){
-      h+='<div class="rw-me"><div class="rw-me-rank">#'+myPos+'</div><div style="flex:1"><div style="font-weight:800;font-size:14px">Hạng của bạn tháng này</div><div style="font-size:11px;color:var(--muted);margin-top:3px">'+me.games+' game · luyện tướng '+me.trainPct+'% · điểm danh '+me.attPct+'%</div></div><span class="att-pct '+(me.score>=80?"hi":me.score>=60?"mid":"lo")+'">'+me.score+'</span></div>';
-      if(myPos>2)h+='<div style="font-size:11px;color:var(--muted);margin-top:10px">💡 Vào Top 2 cuối tháng để nhận thẻ thưởng xanh.</div>';
+      var gp=maxG2>0?Math.round(me.games/maxG2*100):0;
+      var lvp=me.lvl===null?0:Math.round(me.lvl*10);
+      // khoảng cách tới hạng 2
+      var need=0;
+      if(!inTop2&&rows[1])need=Math.max(0,rows[1].score-me.score);
+      h+='<div class="rw-hero">'+
+        // ── thẻ xem trước ──
+        '<div><div class="rw-prev'+(inTop2||earned?"":" locked")+'">'+
+          previewCardHTML(inTop2?myPos:1,mk,inTop2,earned)+
+          (inTop2||earned?"":'<div class="rw-lockov"><div class="rw-lockic">🔒</div><div class="rw-lockmsg">Cần vào Top 2<br>mới mở khóa</div></div>')+
+        '</div><div class="rw-prevcap">'+(earned?"🎉 Bạn đã có thẻ tháng này":(inTop2?"✨ Bạn đang trong Top 2":"Phần thưởng đang chờ bạn"))+'</div></div>'+
+        // ── bảng điểm ──
+        '<div class="rw-panel">'+
+          '<div class="rw-phd">'+
+            '<div class="rw-bigrank'+(inTop2?" top2":"")+'"><b>#'+myPos+'</b><span>HẠNG</span></div>'+
+            '<div><div style="font-weight:900;font-size:15px">Hạng của bạn</div>'+
+            '<div style="font-size:11px;color:var(--muted);margin-top:3px">'+monLabel(mk)+' · '+rows.length+' tuyển thủ</div></div>'+
+            '<div class="rw-score"><b style="color:'+(me.score>=80?"#4ade80":me.score>=60?"var(--gold)":"#f87171")+'">'+me.score+'</b><span>ĐIỂM</span></div>'+
+          '</div>'+
+          stRow("Mức độ tập luyện","40%",lvp,"#a855f7")+
+          stRow("Số game đã chơi","30%",gp,"#E7C873")+
+          stRow("Hoàn thành luyện tướng","20%",me.trainPct,"#06b6d4")+
+          stRow("Điểm danh","10%",me.attPct,"#22c55e")+
+          (inTop2
+            ?'<div class="rw-goal g-in"><span class="rw-goal-ic">🔥</span><div>Bạn đang ở <b>Top '+myPos+'</b> — giữ phong độ tới cuối tháng để nhận thẻ!</div></div>'
+            :'<div class="rw-goal g-need"><span class="rw-goal-ic">⚡</span><div>Cần thêm <b>'+need+' điểm</b> để chen vào Top 2 và mở khóa thẻ thưởng.</div></div>')+
+        '</div>'+
+      '</div>';
     }
-    if(mine.length)h+='<div class="rw-grid" style="margin-top:14px">'+mine.map(function(r){return rewardCardHTML(r,true);}).join("")+'</div>';
+    if(mine.length)h+='<div style="border-top:1px solid var(--bdr);margin-top:18px;padding-top:15px"><div class="ct" style="color:var(--gold)">🎴 THẺ CỦA BẠN</div><div class="rw-grid">'+mine.map(function(r){return rewardCardHTML(r,true);}).join("")+'</div></div>';
   }
   return h+'</div>';
 }
@@ -1627,6 +1733,9 @@ function renderTraining(){
   // thanh "đã chơi" chạy từ 0 lên mức thật
   var tf=document.querySelectorAll("#training-list .tk-fill");
   requestAnimationFrame(function(){tf.forEach(function(f,i){f.style.transitionDelay=(i*45)+"ms";f.style.width=f.dataset.w+"%";});});
+  // thanh thành phần điểm trong khối "Hạng của bạn"
+  var sf=document.querySelectorAll("#rewards-box .rw-st-fill");
+  requestAnimationFrame(function(){sf.forEach(function(f,i){f.style.transitionDelay=(120+i*130)+"ms";f.style.width=f.dataset.w+"%";});});
   renderRace();
 }
 // ── BẢNG ĐUA SỐ GAME (mọi người đều xem được) ──
