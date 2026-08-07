@@ -65,10 +65,32 @@ tr{border-top:1px solid var(--bdr)}
 th{color:var(--muted);font-size:10px;font-weight:700}
 .tag{display:inline-block;font-size:10px;font-weight:900;padding:2px 8px;border-radius:4px;letter-spacing:.8px}
 .hs-wrap{position:relative}
-.hs-dd{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--gold);border-radius:8px;z-index:999;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.8);display:none}
-.hs-dd.open{display:block}
-.hs-opt{padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--bdr)}
-.hs-opt:hover{background:#C8A94A22}
+.hs-dd{position:absolute;top:calc(100% + 5px);left:0;right:0;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent),var(--card);
+  border:1px solid rgba(231,200,115,.45);border-radius:13px;z-index:999;max-height:230px;overflow-y:auto;padding:5px;
+  box-shadow:0 20px 48px -14px rgba(0,0,0,.92),0 0 0 1px rgba(0,0,0,.4);display:none}
+.hs-dd.open{display:block;animation:hsIn .17s cubic-bezier(.34,1.4,.64,1)}
+@keyframes hsIn{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
+.hs-opt{padding:9px 12px;cursor:pointer;font-size:13px;border-radius:9px;margin-bottom:2px;transition:background .13s,color .13s,padding-left .13s}
+.hs-opt:last-child{margin-bottom:0}
+.hs-opt:hover{background:var(--gold-soft);color:var(--gold);padding-left:16px}
+.hs-opt mark{background:transparent;color:var(--gold);font-weight:900}
+.hs-opt:hover mark{color:#fff}
+.hs-empty{padding:14px;text-align:center;font-size:12px;color:var(--muted)}
+/* ── tinh chỉnh chung toàn app ── */
+.ct{position:relative;padding-left:12px}
+.ct::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:13px;border-radius:2px;
+  background:currentColor;box-shadow:0 0 9px -1px currentColor}
+.card{transition:border-color .25s ease,box-shadow .25s ease}
+.card:hover{border-color:#33415f}
+.modal.open .modal-box{animation:modalIn .3s cubic-bezier(.34,1.4,.64,1)}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+.toast{animation:toastIn .32s cubic-bezier(.34,1.5,.6,1)}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,18px)}to{opacity:1;transform:translate(-50%,0)}}
+.tab-btn.active{position:relative}
+.tab-btn.active::after{content:"";position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);width:26px;height:2px;border-radius:2px;
+  background:var(--gold);box-shadow:0 0 12px 1px var(--gold)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.empty{border:1px dashed var(--bdr);border-radius:12px;background:rgba(255,255,255,.012)}
 .flex{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .stat-mini{background:#060B12;border-radius:8px;padding:5px 10px;text-align:center;min-width:46px}
 .progress-track{height:5px;background:var(--bdr);border-radius:3px;overflow:hidden;margin-bottom:12px}
@@ -807,6 +829,19 @@ function daysUntil(ds){return Math.ceil((new Date(ds)-new Date(today()))/8640000
 function rc(r){return r==="Win"?"#22c55e":r==="Loss"?"#ef4444":"#C8A94A";}
 function mkTag(t,c){return'<span class="tag" style="background:'+c+'22;border:1px solid '+c+';color:'+c+'">'+t+'</span>';}
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+// Thoát chuỗi để nhúng làm THAM SỐ JS bên trong thuộc tính HTML: onclick="f('...')".
+// Phải thoát \ và ' cho JS TRƯỚC, rồi mới thoát ký tự HTML. Thiếu bước này thì tên
+// có dấu nháy (VD tướng "Tel'Annas") sẽ cắt đứt chuỗi -> bấm chọn không ăn.
+function jsq(s){
+  return String(s==null?"":s)
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'")
+    .replace(/[\r\n]+/g," ")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
 function pInfo(pid){var p=CFG.players&&CFG.players[pid];const d=DEF_PLAYERS[pid]||{name:pid,pos:pid,avatar:"🎮"};return p?{name:p.name||d.name,pos:p.pos||d.pos,avatar:p.avatar||d.avatar}:d;}
 // Active (non-locked) players — locked players (đã rời đội) are hidden from roster views but their data is kept.
 function actPIDS(){return PIDS.filter(function(pid){return !CFG.disabled||!CFG.disabled[pid];});}
@@ -1716,7 +1751,7 @@ function renderTraining(){
       return'<div class="tk-row'+(isDone?" tk-done":"")+'">'+
         '<div class="tk-top">'+
           heroPorHTML(t.hero,isDone)+
-          '<div style="flex:1;min-width:130px">'+(isCoach?mkHS(hsId,t.hero||"",pid,idx):'<div style="display:flex;align-items:center;gap:6px"><span class="tk-nm">'+esc(t.hero||"—")+'</span><button onclick="openHeroEdit(\''+hsId+'\',\''+pid+'\',\''+idx+'\',\''+esc(t.hero||"")+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0">✏️</button></div>')+'</div>'+
+          '<div style="flex:1;min-width:130px">'+(isCoach?mkHS(hsId,t.hero||"",pid,idx):'<div style="display:flex;align-items:center;gap:6px"><span class="tk-nm">'+esc(t.hero||"—")+'</span><button onclick="openHeroEdit(\''+jsq(hsId)+'\',\''+jsq(pid)+'\',\''+jsq(idx)+'\',\''+jsq(t.hero||"")+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0">✏️</button></div>')+'</div>'+
           '<div class="tk-req"><span class="tk-lbl">YÊU CẦU</span>'+(isCoach?'<input type="number" min="1" max="99" value="'+esc(t.required||"")+'" placeholder="0" onchange="saveTaskF(\''+pid+'\',\''+idx+'\',\'required\',this.value)" style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:6px;font-size:13px;width:52px;text-align:center;font-family:inherit;outline:none">':'<span style="font-weight:800;color:var(--gold);font-size:14px">'+(t.required||"?")+'</span>')+'<span class="tk-lbl">game</span></div>'+
           (isCoach?'<button class="btn btn-red btn-sm" onclick="removeTask(\''+pid+'\',\''+idx+'\')">✕</button>':"")+
         '</div>'+
@@ -1780,7 +1815,14 @@ function renderRace(){
   });
 }
 function mkHS(id,val,pid,idx){return'<div class="hs-wrap"><input id="inp-'+id+'" value="'+esc(val)+'" placeholder="Tìm tướng..." onkeyup="fHS(\''+id+'\')" onfocus="fHS(\''+id+'\')" onblur="setTimeout(()=>cHS(\''+id+'\'),350)" style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:8px 12px;font-size:13px;width:100%;font-family:inherit;outline:none"><div id="dd-'+id+'" class="hs-dd" data-pid="'+pid+'" data-idx="'+idx+'"></div></div>';}
-function fHS(id){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(!inp||!dd)return;const q=inp.value.toLowerCase();const heroes=CFG.heroes||DEF_HEROES;const fil=q?heroes.filter(h=>h.toLowerCase().includes(q)):heroes;dd.onmousedown=function(e){e.preventDefault();};dd.innerHTML=fil.map(h=>'<div class="hs-opt" onmousedown="sHS(\''+id+'\',\''+esc(h)+'\')">'+esc(h)+'</div>').join("");dd.classList.add("open");}
+function fHS(id){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(!inp||!dd)return;const q=inp.value.toLowerCase();const heroes=CFG.heroes||DEF_HEROES;const fil=q?heroes.filter(h=>h.toLowerCase().includes(q)):heroes;dd.onmousedown=function(e){e.preventDefault();};dd.innerHTML=fil.map(h=>'<div class="hs-opt" onmousedown="sHS(\''+jsq(id)+'\',\''+jsq(h)+'\')">'+hlMatch(h,q)+'</div>').join("")||'<div class="hs-empty">Không tìm thấy tướng nào</div>';dd.classList.add("open");}
+// Tô sáng đoạn chữ khớp với từ đang gõ.
+function hlMatch(h,q){
+  if(!q)return esc(h);
+  var i=h.toLowerCase().indexOf(q);
+  if(i<0)return esc(h);
+  return esc(h.slice(0,i))+'<mark>'+esc(h.slice(i,i+q.length))+'</mark>'+esc(h.slice(i+q.length));
+}
 function sHS(id,hero){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(inp)inp.value=hero;if(dd){dd.classList.remove("open");const pid=dd.dataset.pid;const idx=dd.dataset.idx;if(pid&&idx!=null){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};if(!DATA.weekTasks[vw][pid][idx])DATA.weekTasks[vw][pid][idx]={};DATA.weekTasks[vw][pid][idx].hero=hero;dSaveNow("weekTasks",DATA.weekTasks);}}}
 function cHS(id){document.getElementById("dd-"+id)?.classList.remove("open");}
 function saveTaskF(pid,idx,field,val){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};if(!DATA.weekTasks[vw][pid][idx])DATA.weekTasks[vw][pid][idx]={};DATA.weekTasks[vw][pid][idx][field]=val;dSaveNow("weekTasks",DATA.weekTasks);if(field==="played")setTimeout(function(){if(!_isEditing())renderTraining();},600);}
@@ -1907,9 +1949,9 @@ function renderSchedule(){
 
         // Teams
         if(canEdit){
-          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t1)+'" oninput="dUpdateTeam(\''+ev.id+'\',0,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:#111;font-size:12px;font-weight:700;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
-          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t2)+'" oninput="dUpdateTeam(\''+ev.id+'\',1,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:#111;font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
-          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t3)+'" oninput="dUpdateTeam(\''+ev.id+'\',2,this.value,\''+esc(ev.name||'')+'\')" style="background:transparent;border:none;color:#111;font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t1)+'" oninput="dUpdateTeam(\''+ev.id+'\',0,this.value,\''+jsq(ev.name||'')+'\')" style="background:transparent;border:none;color:#111;font-size:12px;font-weight:700;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t2)+'" oninput="dUpdateTeam(\''+ev.id+'\',1,this.value,\''+jsq(ev.name||'')+'\')" style="background:transparent;border:none;color:#111;font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
+          html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(t3)+'" oninput="dUpdateTeam(\''+ev.id+'\',2,this.value,\''+jsq(ev.name||'')+'\')" style="background:transparent;border:none;color:#111;font-size:12px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
           html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input type="time" value="'+esc(ev.time||'')+'" oninput="dUpdateField(\''+ev.id+'\',\'time\',this.value)" style="background:transparent;border:none;color:var(--gold);font-size:11px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
           html+='<td style="padding:3px 6px;border:1px solid var(--bdr)"><input value="'+esc(ev.note||'')+'" oninput="dUpdateField(\''+ev.id+'\',\'note\',this.value)" style="background:transparent;border:none;color:var(--muted);font-size:11px;width:100%;font-family:inherit;padding:2px;outline:none"></td>';
           html+='<td style="padding:4px;border:1px solid var(--bdr);text-align:center"><button class="btn btn-red btn-sm" onclick="deleteEvent(\''+ev.id+'\')">🗑</button></td>';
@@ -2246,7 +2288,7 @@ function renderSettings(){
   document.getElementById("cfg-date").value=CFG.eventDate||"2026-06-15";
   document.getElementById("opp-editor").innerHTML=(CFG.opponents||DEF_OPPS).map((o,i)=>'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><input value="'+esc(o)+'" onchange="updateOpp('+i+',this.value)" style="flex:1"><button class="btn btn-red btn-sm" onclick="removeOpp('+i+')">🗑</button></div>').join("");
   const heroes=CFG.heroes||DEF_HEROES;
-  document.getElementById("hero-editor").innerHTML=heroes.map((h,i)=>'<div style="display:flex;align-items:center;gap:4px;background:var(--mid);border:1px solid var(--bdr);border-radius:6px;padding:4px 8px"><span style="font-size:12px;cursor:pointer" onclick="openHeroListEdit('+i+',\''+esc(h)+'\')">'+esc(h)+' ✏️</span><button onclick="removeHero('+i+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0;margin-left:2px">✕</button></div>').join("");
+  document.getElementById("hero-editor").innerHTML=heroes.map((h,i)=>'<div style="display:flex;align-items:center;gap:4px;background:var(--mid);border:1px solid var(--bdr);border-radius:6px;padding:4px 8px"><span style="font-size:12px;cursor:pointer" onclick="openHeroListEdit('+i+',\''+jsq(h)+'\')">'+esc(h)+' ✏️</span><button onclick="removeHero('+i+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0;margin-left:2px">✕</button></div>').join("");
   const allIds=["p1","p2","p3","p4","p5","p6","p7","p8","p9","assist","manager","supv"];
   const staffLabels={assist:"📋 Trợ Lý",manager:"👔 Quản Lý",supv:"🔍 Supv"};
   renderHeroImgs();
@@ -2301,10 +2343,10 @@ function renderHeroImgs(){
   if(!list.length){g.innerHTML='<div class="empty" style="grid-column:1/-1;padding:14px 0">Không tìm thấy tướng nào</div>';return;}
   g.innerHTML=list.map(function(h){
     var has=!!heroImg(h);
-    return'<div class="hi-cell'+(has?" hi-on":"")+(hiSel===h?" hi-sel":"")+'" onclick="pickHeroImg(\''+esc(h).replace(/'/g,"\\'")+'\')">'+
+    return'<div class="hi-cell'+(has?" hi-on":"")+(hiSel===h?" hi-sel":"")+'" onclick="pickHeroImg(\''+jsq(h)+'\')">'+
       heroPorHTML(h,false,"hp-lg")+
       '<div class="hi-nm" title="'+esc(h)+'">'+esc(h)+'</div>'+
-      '<div class="hi-act">'+(has?'<span style="color:#22c55e">✓ có ảnh</span> · <span style="color:#ef4444;text-decoration:underline" onclick="event.stopPropagation();delHeroImg(\''+esc(h).replace(/'/g,"\\'")+'\')">xóa</span>':"chưa có ảnh")+'</div>'+
+      '<div class="hi-act">'+(has?'<span style="color:#22c55e">✓ có ảnh</span> · <span style="color:#ef4444;text-decoration:underline" onclick="event.stopPropagation();delHeroImg(\''+jsq(h)+'\')">xóa</span>':"chưa có ảnh")+'</div>'+
     '</div>';
   }).join("");
   var pz=document.getElementById("hi-paste");
