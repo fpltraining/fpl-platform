@@ -951,8 +951,107 @@ function getStreak(pid){
 function showToast(m,c){const t=document.getElementById("toast");t.textContent=m;t.style.background=c||"#22c55e";t.style.color=c?"#fff":"#030709";t.style.display="block";setTimeout(function(){t.style.display="none";},2800);}
 function openModal(id){document.getElementById(id).classList.add("open");}
 function closeModal(id){document.getElementById(id).classList.remove("open");}
-function dSaveNow(k,v){_lastEditAt=Date.now();clearTimeout(saveQ[k]);dbSet(k,v);}
-function dSave(k,v,d){_lastEditAt=Date.now();clearTimeout(saveQ[k]);saveQ[k]=setTimeout(function(){_lastEditAt=Date.now();dbSet(k,v);},d||1500);}
+// Đếm số lần ghi đang bay của từng key. Khi còn ghi chưa xong, KHÔNG được áp
+// dữ liệu tải về cho key đó — server có thể chưa nhận kịp và sẽ trả về bản cũ,
+// đè mất thứ vừa sửa.
+var pendingSave={};
+function isPending(k){return (pendingSave[k]||0)>0||((opQ[k]||[]).length>0);}
+// Ghi 1 key, tự thử lại 1 lần khi lỗi mạng, và BÁO cho người dùng nếu vẫn hỏng.
+// Trước đây lỗi ghi bị nuốt im lặng nên dữ liệu mất mà không ai hay.
+function _writeKey(k,v){
+  pendingSave[k]=(pendingSave[k]||0)+1;
+  function done(ok){
+    pendingSave[k]=Math.max(0,(pendingSave[k]||1)-1);
+    if(!ok){
+      _saveFailed[k]=true;
+      showToast("⚠️ Chưa lưu được ("+k+") — kiểm tra mạng!","#ef4444");
+    }else if(_saveFailed[k]){
+      _saveFailed[k]=false;showToast("✅ Đã lưu lại thành công!");
+    }
+    return ok;
+  }
+  return dbSet(k,v).then(function(ok){
+    if(ok)return true;
+    return new Promise(function(r){setTimeout(r,900);}).then(function(){return dbSet(k,v);});
+  }).then(done).catch(function(){return done(false);});
+}
+var _saveFailed={};
+function dSaveNow(k,v){_lastEditAt=Date.now();clearTimeout(saveQ[k]);_writeKey(k,v);}
+function dSave(k,v,d){_lastEditAt=Date.now();clearTimeout(saveQ[k]);saveQ[k]=setTimeout(function(){_lastEditAt=Date.now();_writeKey(k,v);},d||1500);}
+
+// ══════════════════════════════════════════════════
+// GHI THEO THAY ĐỔI NHỎ — chống 2 máy ghi đè nhau
+// ══════════════════════════════════════════════════
+// Trước đây mỗi lần lưu là ghi ĐÈ nguyên khối (VD cả 11 tuần weekTasks, cả 262
+// bản ghi điểm danh). Hai người thao tác cùng lúc thì người ghi sau xóa sạch
+// thay đổi của người ghi trước — kể cả khi họ sửa 2 tuyển thủ khác nhau, hoặc
+// khi 8 học trò cùng điểm danh buổi sáng.
+// Giờ: chỉ ghi nhớ ĐƯỜNG DẪN vừa đổi, khi gửi thì tải bản mới nhất từ server,
+// dán thay đổi của mình lên đó rồi mới ghi -> thay đổi của người khác được giữ.
+var opQ={},opT={},_lastFlushErr=null;
+function _dig(o,p){
+  for(var i=0;i<p.length;i++){
+    var k=p[i];
+    if(o[k]===null||typeof o[k]!=="object")o[k]={};
+    o=o[k];
+  }
+  return o;
+}
+function _applyOp(root,op){
+  if(op.arr){                                   // danh sách: khớp theo id
+    if(!Array.isArray(root))return;
+    var j=-1;
+    for(var i=0;i<root.length;i++){if(String((root[i]||{}).id)===String(op.id)){j=i;break;}}
+    if(op.del){if(j>=0)root.splice(j,1);}
+    else if(j>=0)root[j]=op.v;else root.push(op.v);
+    return;
+  }
+  var p=op.p;if(!p||!p.length)return;
+  var parent=p.length>1?_dig(root,p.slice(0,-1)):root;
+  if(!parent||typeof parent!=="object")return;
+  var last=p[p.length-1];
+  if(op.del)delete parent[last];else parent[last]=op.v;
+}
+// Sửa 1 chỗ trong map: áp vào bộ nhớ ngay + xếp hàng gửi lên server.
+function opSet(key,path,val,delay){return _op(key,{p:path.slice(),v:val},delay);}
+function opDel(key,path,delay){return _op(key,{p:path.slice(),del:true},delay);}
+// Thêm/sửa/xóa 1 phần tử trong danh sách (phần tử phải có .id).
+function opPut(key,item,delay){return _op(key,{arr:true,id:item.id,v:item},delay);}
+function opCut(key,id,delay){return _op(key,{arr:true,id:id,del:true},delay);}
+function _op(key,op,delay){
+  _applyOp(DATA[key],op);
+  (opQ[key]=opQ[key]||[]).push(op);
+  _lastEditAt=Date.now();
+  clearTimeout(opT[key]);
+  opT[key]=setTimeout(function(){flushOps(key);},delay||400);
+}
+async function flushOps(key){
+  var ops=opQ[key]||[];
+  if(!ops.length)return;
+  opQ[key]=[];
+  pendingSave[key]=(pendingSave[key]||0)+1;
+  var ok=false;
+  try{
+    var server=await dbGet(key);                       // bản mới nhất của mọi người
+    var base=server;
+    if(Array.isArray(DATA[key]))base=Array.isArray(server)?server:[];
+    else if(!base||typeof base!=="object"||Array.isArray(base))base={};
+    ops.forEach(function(o){_applyOp(base,o);});       // dán thay đổi của mình lên
+    (opQ[key]||[]).forEach(function(o){_applyOp(base,o);});  // + op mới phát sinh lúc chờ mạng
+    DATA[key]=base;
+    ok=await dbSet(key,base);
+    if(!ok){await new Promise(function(r){setTimeout(r,900);});ok=await dbSet(key,base);}
+  }catch(e){ok=false;console.warn("flushOps("+key+") lỗi:",e);_lastFlushErr=String(e&&e.message||e);}
+  pendingSave[key]=Math.max(0,(pendingSave[key]||1)-1);
+  if(!ok){
+    opQ[key]=ops.concat(opQ[key]||[]);                 // giữ lại, tự thử lại sau
+    _saveFailed[key]=true;
+    showToast("⚠️ Chưa lưu được — đang thử lại...","#ef4444");
+    clearTimeout(opT[key]);opT[key]=setTimeout(function(){flushOps(key);},4000);
+  }else if(_saveFailed[key]){_saveFailed[key]=false;showToast("✅ Đã lưu lại thành công!");}
+}
+// Đẩy nốt mọi thay đổi còn treo khi người dùng đóng/rời trang.
+window.addEventListener("beforeunload",function(){Object.keys(opQ).forEach(function(k){if((opQ[k]||[]).length)flushOps(k);});});
 
 // ══════════════════════════════════════════════════
 // BOOT
@@ -1016,11 +1115,14 @@ function buildLoginDropdown(){
 async function refreshData(){if(!CU)return;
   // Đừng đồng bộ khi đang gõ hoặc vừa mới sửa — tránh việc vẽ lại làm mất
   // dữ liệu chưa kịp lưu (ô nhập chỉ lưu khi rời ô). Sẽ tự đồng bộ khi rảnh tay.
-  var ae=document.activeElement;
-  if(ae&&(ae.tagName==="INPUT"||ae.tagName==="TEXTAREA"||ae.tagName==="SELECT"))return;
+  if(_isEditing())return;
   if(Date.now()-_lastEditAt<3000)return;
   try{
   var rd=await Promise.all([dbGet("attendance"),dbGet("scrims"),dbGet("announcements"),dbGet("dailyNotes"),dbGet("events"),dbGet("absences"),dbGet("weekTasks"),dbGet("trainLevels"),dbGet("achievements"),dbGet("rewards"),dbGet("heroImgsVer")]);
+  // Tải về mất vài trăm ms tới vài giây. Trong lúc đó người dùng đã có thể bắt đầu
+  // gõ hoặc vừa sửa xong — nếu cứ áp dữ liệu cũ vừa tải xuống thì sẽ ĐÈ MẤT thứ họ
+  // đang nhập. Phải kiểm tra LẠI ngay trước khi ghi đè.
+  if(_isEditing()||Date.now()-_lastEditAt<3000)return;
   // Ảnh tướng: chỉ kéo cả kho khi số phiên bản khác với bản đang giữ.
   var imgsChanged=false;
   if(rd[10]&&rd[10]!==heroImgVer){
@@ -1031,16 +1133,17 @@ async function refreshData(){if(!CU)return;
     var ps=document.getElementById("page-settings");
     if(ps&&ps.classList.contains("active"))renderHeroImgs();
   }
-  if(rd[0])DATA.attendance=rd[0];
-  if(rd[1])DATA.scrims=Array.isArray(rd[1])?rd[1]:[];
-  if(rd[2])DATA.announcements=Array.isArray(rd[2])?rd[2]:[];
-  if(rd[3])DATA.dailyNotes=Array.isArray(rd[3])?rd[3]:[];
-  if(rd[4])DATA.events=Array.isArray(rd[4])?rd[4]:[];
-  if(rd[5])DATA.absences=Array.isArray(rd[5])?rd[5]:[];
-  if(rd[6])DATA.weekTasks=rd[6];
-  if(rd[7])DATA.trainLevels=rd[7]||{};
-  if(rd[8])DATA.achievements=Array.isArray(rd[8])?rd[8]:[];
-  if(rd[9])DATA.rewards=Array.isArray(rd[9])?rd[9]:[];
+  // Bỏ qua key nào đang có lệnh ghi chưa hoàn tất (xem isPending).
+  if(rd[0]&&!isPending("attendance"))DATA.attendance=rd[0];
+  if(rd[1]&&!isPending("scrims"))DATA.scrims=Array.isArray(rd[1])?rd[1]:[];
+  if(rd[2]&&!isPending("announcements"))DATA.announcements=Array.isArray(rd[2])?rd[2]:[];
+  if(rd[3]&&!isPending("dailyNotes"))DATA.dailyNotes=Array.isArray(rd[3])?rd[3]:[];
+  if(rd[4]&&!isPending("events"))DATA.events=Array.isArray(rd[4])?rd[4]:[];
+  if(rd[5]&&!isPending("absences"))DATA.absences=Array.isArray(rd[5])?rd[5]:[];
+  if(rd[6]&&!isPending("weekTasks"))DATA.weekTasks=rd[6];
+  if(rd[7]&&!isPending("trainLevels"))DATA.trainLevels=rd[7]||{};
+  if(rd[8]&&!isPending("achievements"))DATA.achievements=Array.isArray(rd[8])?rd[8]:[];
+  if(rd[9]&&!isPending("rewards"))DATA.rewards=Array.isArray(rd[9])?rd[9]:[];
   var pd=document.getElementById("page-dashboard");
   var pa=document.getElementById("page-attendance");
   var pt=document.getElementById("page-training");
@@ -1215,9 +1318,8 @@ function renderTrainLevelsHTML(){
 }
 function updateTL(key,val,el){
   var v=parseInt(val);
-  DATA.trainLevels[key]=v;
   if(el){el.style.background=tlBg(v);var b=el.parentElement.querySelector(".tl-val");if(b){b.textContent=v?v:"—";b.style.color=tlColor(v);}}
-  dSave("trainLevels",DATA.trainLevels,600);
+  opSet("trainLevels",[key],v,600);
 }
 
 // ══════════════════════════════════════════════════
@@ -1316,12 +1418,12 @@ function awardGreen(mk){
   var added=0;
   top.forEach(function(r,i){
     if(findReward(r.pid,"green",mk))return;
-    DATA.rewards.push({id:Date.now()+"-"+r.pid,pid:r.pid,type:"green",month:mk,rank:i+1,score:r.score,
-      reason:"Top "+(i+1)+" chuyên cần & luyện tập "+monLabel(mk),awarded:Date.now(),claimed:false});
+    opPut("rewards",{id:Date.now()+"-"+r.pid,pid:r.pid,type:"green",month:mk,rank:i+1,score:r.score,
+      reason:"Top "+(i+1)+" chuyên cần & luyện tập "+monLabel(mk),awarded:Date.now(),claimed:false},250);
     added++;
   });
   if(!added){showToast("Đã trao thẻ cho tháng này rồi!","#f97316");return;}
-  dSaveNow("rewards",DATA.rewards);attConfetti();
+  attConfetti();
   showToast("🎁 Đã trao "+added+" thẻ xanh!");renderTraining();
 }
 function openRedAward(){
@@ -1335,16 +1437,15 @@ function saveRedAward(){
   var reason=document.getElementById("rw-reason").value.trim();
   if(!pid){showToast("Chọn tuyển thủ!","#ef4444");return;}
   if(!reason){showToast("Nhập lý do trao thẻ!","#ef4444");return;}
-  DATA.rewards.push({id:Date.now()+"-"+pid,pid:pid,type:"red",month:monKey(0),reason:reason,awarded:Date.now(),claimed:false});
-  dSaveNow("rewards",DATA.rewards);closeModal("reward-modal");attConfetti();
+  opPut("rewards",{id:Date.now()+"-"+pid,pid:pid,type:"red",month:monKey(0),reason:reason,awarded:Date.now(),claimed:false},250);
+  closeModal("reward-modal");attConfetti();
   showToast("🔥 Đã trao thẻ đỏ!");renderTraining();
 }
 function claimReward(id,btnEl){
   var r=DATA.rewards.filter(function(x){return String(x.id)===String(id);})[0];
   if(!r||r.claimed)return;
   if(!claimOpen(r)){showToast("Chưa tới ngày nhận thưởng!","#f97316");return;}
-  r.claimed=true;r.claimedAt=Date.now();
-  dSaveNow("rewards",DATA.rewards);
+  opPut("rewards",Object.assign({},r,{claimed:true,claimedAt:Date.now()}),250);
   var card=btnEl?btnEl.closest(".rw-card"):document.querySelector('.rw-card[data-rwid="'+id+'"]');
   flyCardToBag(card,function(){
     attConfetti();showToast("🎉 Đã bỏ thẻ vào Túi thưởng!");
@@ -1411,8 +1512,7 @@ function updateBagBadge(){
 }
 function delReward(id){
   if(!confirm("Thu hồi thẻ thưởng này?"))return;
-  DATA.rewards=DATA.rewards.filter(function(x){return String(x.id)!==String(id);});
-  dSaveNow("rewards",DATA.rewards);renderTraining();renderAccount();
+  opCut("rewards",id,250);renderTraining();renderAccount();
 }
 // Thẻ thưởng dùng chung cho Túi thưởng + bảng coach.
 function rewardCardHTML(r,showClaim){
@@ -1604,24 +1704,22 @@ function submitAbsence(){
   const reason=document.getElementById("abs-reason").value;
   const note=document.getElementById("abs-note").value;
   if(!date||!reason){showToast("Vui lòng chọn ngày và lý do!","#ef4444");return;}
-  DATA.absences.push({id:String(Date.now()),pid:CID,date,reason,note,status:"pending",submittedAt:today()});
-  dSave("absences",DATA.absences,300);
+  opPut("absences",{id:String(Date.now())+"-"+CID,pid:CID,date,reason,note,status:"pending",submittedAt:today()},300);
   document.getElementById("abs-date").value="";document.getElementById("abs-reason").value="";document.getElementById("abs-note").value="";
   showToast("📩 Đã gửi báo vắng!");renderDashboard();
 }
 function approveAbs(id){
-  var idx=DATA.absences.findIndex(a=>String(a.id)===String(id));
-  if(idx>=0){
-    var abs=DATA.absences[idx];
-    DATA.absences[idx].status="approved";
-    DATA.attendance[abs.date+"_"+abs.pid]={time:"Báo vắng",status:"absent"};
-    dSave("absences",DATA.absences,300);dSave("attendance",DATA.attendance,300);
-    showToast("✅ Đã duyệt báo vắng!");renderDashboard();renderAtt();
-  }
+  var abs=DATA.absences.filter(function(a){return String(a.id)===String(id);})[0];
+  if(!abs)return;
+  opPut("absences",Object.assign({},abs,{status:"approved"}),300);
+  opSet("attendance",[abs.date+"_"+abs.pid],{time:"Báo vắng",status:"absent"},300);
+  showToast("✅ Đã duyệt báo vắng!");renderDashboard();renderAtt();
 }
 function rejectAbs(id){
-  var idx=DATA.absences.findIndex(a=>String(a.id)===String(id));
-  if(idx>=0){DATA.absences[idx].status="rejected";dSave("absences",DATA.absences,300);showToast("❌ Đã từ chối","#ef4444");renderDashboard();}
+  var abs=DATA.absences.filter(function(a){return String(a.id)===String(id);})[0];
+  if(!abs)return;
+  opPut("absences",Object.assign({},abs,{status:"rejected"}),300);
+  showToast("❌ Đã từ chối","#ef4444");renderDashboard();
 }
 
 // ══════════════════════════════════════════════════
@@ -1713,13 +1811,12 @@ function doCheckIn(){
   var nowMins=nowH*60+nowM;
   var status=nowMins>ctMins+15?"late":"present";
   var time=now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"});
-  DATA.attendance[key]={time,status};
-  dSave("attendance",DATA.attendance,500);
+  opSet("attendance",[key],{time,status},400);
   _attCelebrate(td);renderAtt();renderDashboard();
   showToast(status==="late"?"⚠️ Điểm danh MUỘN! "+time:"✅ Đúng giờ! "+time,status==="late"?"#f97316":undefined);
 }
-function markAtt(pid,date,status){const key=date+"_"+pid;const cur=DATA.attendance[key];if(cur&&cur.status===status)delete DATA.attendance[key];else DATA.attendance[key]={time:"Manual",status};dSave("attendance",DATA.attendance,500);_attCelebrate(date);renderAtt();}
-function cycleAtt(pid,date){const key=date+"_"+pid;const cur=DATA.attendance[key];const order=["present","late","absent"];const nxt=order[(cur?order.indexOf(cur.status):-1)+1];if(nxt)DATA.attendance[key]={time:"Manual",status:nxt};else delete DATA.attendance[key];dSave("attendance",DATA.attendance,500);_attCelebrate(date);renderAtt();}
+function markAtt(pid,date,status){const key=date+"_"+pid;const cur=DATA.attendance[key];if(cur&&cur.status===status)opDel("attendance",[key],500);else opSet("attendance",[key],{time:"Manual",status},500);_attCelebrate(date);renderAtt();}
+function cycleAtt(pid,date){const key=date+"_"+pid;const cur=DATA.attendance[key];const order=["present","late","absent"];const nxt=order[(cur?order.indexOf(cur.status):-1)+1];if(nxt)opSet("attendance",[key],{time:"Manual",status:nxt},500);else opDel("attendance",[key],500);_attCelebrate(date);renderAtt();}
 var attAnim=false,_attDoneFlag=false;
 function _attCelebrate(date){var t=today();if(date&&date!==t)return;var ap=actPIDS();var done=ap.length>0&&ap.every(function(pid){return DATA.attendance[t+"_"+pid];});if(done&&!_attDoneFlag){attConfetti();showToast("🎉 Đã điểm danh đủ cả đội!","#22c55e");}}
 function attConfetti(){var c=document.createElement("canvas");c.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:600";c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);var ctx=c.getContext("2d");var cols=["#E7C873","#22c55e","#3b82f6","#a855f7","#ef4444","#06b6d4"];var P=[];for(var i=0;i<100;i++)P.push({x:innerWidth/2+(Math.random()-.5)*180,y:innerHeight*.3,vx:(Math.random()-.5)*12,vy:Math.random()*-12-4,g:.28+Math.random()*.12,s:5+Math.random()*6,rot:Math.random()*6,vr:(Math.random()-.5)*.4,col:cols[i%cols.length]});var t0=performance.now();(function f(now){var dt=now-t0;ctx.clearRect(0,0,c.width,c.height);for(var j=0;j<P.length;j++){var p=P[j];p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;ctx.save();ctx.globalAlpha=Math.max(0,1-dt/1700);ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);ctx.restore();}if(dt<1700)requestAnimationFrame(f);else c.remove();})(t0);}
@@ -1814,7 +1911,10 @@ function renderRace(){
     });
   });
 }
-function mkHS(id,val,pid,idx){return'<div class="hs-wrap"><input id="inp-'+id+'" value="'+esc(val)+'" placeholder="Tìm tướng..." onkeyup="fHS(\''+id+'\')" onfocus="fHS(\''+id+'\')" onblur="setTimeout(()=>cHS(\''+id+'\'),350)" style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:8px 12px;font-size:13px;width:100%;font-family:inherit;outline:none"><div id="dd-'+id+'" class="hs-dd" data-pid="'+pid+'" data-idx="'+idx+'"></div></div>';}
+// LƯU Ý: ô này PHẢI có onchange. Trước đây tên tướng chỉ được lưu khi bấm chọn
+// từ danh sách gợi ý (sHS) — gõ tay mà không có gợi ý khớp thì không lưu gì cả,
+// nên chữ vừa gõ biến mất ở lần vẽ lại kế tiếp.
+function mkHS(id,val,pid,idx){return'<div class="hs-wrap"><input id="inp-'+id+'" value="'+esc(val)+'" placeholder="Tìm tướng..." onkeyup="fHS(\''+jsq(id)+'\')" onfocus="fHS(\''+jsq(id)+'\')" onchange="saveTaskF(\''+jsq(pid)+'\',\''+jsq(idx)+'\',\'hero\',this.value)" onblur="setTimeout(()=>cHS(\''+jsq(id)+'\'),350)" style="background:var(--input-bg);border:1px solid var(--bdr);border-radius:7px;color:var(--txt);padding:8px 12px;font-size:13px;width:100%;font-family:inherit;outline:none"><div id="dd-'+id+'" class="hs-dd" data-pid="'+pid+'" data-idx="'+idx+'"></div></div>';}
 function fHS(id){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(!inp||!dd)return;const q=inp.value.toLowerCase();const heroes=CFG.heroes||DEF_HEROES;const fil=q?heroes.filter(h=>h.toLowerCase().includes(q)):heroes;dd.onmousedown=function(e){e.preventDefault();};dd.innerHTML=fil.map(h=>'<div class="hs-opt" onmousedown="sHS(\''+jsq(id)+'\',\''+jsq(h)+'\')">'+hlMatch(h,q)+'</div>').join("")||'<div class="hs-empty">Không tìm thấy tướng nào</div>';dd.classList.add("open");}
 // Tô sáng đoạn chữ khớp với từ đang gõ.
 function hlMatch(h,q){
@@ -1823,12 +1923,12 @@ function hlMatch(h,q){
   if(i<0)return esc(h);
   return esc(h.slice(0,i))+'<mark>'+esc(h.slice(i,i+q.length))+'</mark>'+esc(h.slice(i+q.length));
 }
-function sHS(id,hero){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(inp)inp.value=hero;if(dd){dd.classList.remove("open");const pid=dd.dataset.pid;const idx=dd.dataset.idx;if(pid&&idx!=null){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};if(!DATA.weekTasks[vw][pid][idx])DATA.weekTasks[vw][pid][idx]={};DATA.weekTasks[vw][pid][idx].hero=hero;dSaveNow("weekTasks",DATA.weekTasks);}}}
+function sHS(id,hero){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(inp)inp.value=hero;if(dd){dd.classList.remove("open");const pid=dd.dataset.pid;const idx=dd.dataset.idx;if(pid&&idx!=null){const vw=wkS(trainOff);opSet("weekTasks",[vw,pid,idx,"hero"],hero,250);}}}
 function cHS(id){document.getElementById("dd-"+id)?.classList.remove("open");}
-function saveTaskF(pid,idx,field,val){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};if(!DATA.weekTasks[vw][pid][idx])DATA.weekTasks[vw][pid][idx]={};DATA.weekTasks[vw][pid][idx][field]=val;dSaveNow("weekTasks",DATA.weekTasks);if(field==="played")setTimeout(function(){if(!_isEditing())renderTraining();},600);}
-function addTask(pid){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};const existing=Object.keys(DATA.weekTasks[vw][pid]).length;if(existing>=15){showToast("Tối đa 15 tướng mỗi người!","#f97316");return;}const idx=Date.now();DATA.weekTasks[vw][pid][idx]={hero:"",required:"",played:""};dSaveNow("weekTasks",DATA.weekTasks);renderTraining();}
-function removeTask(pid,idx){const vw=wkS(trainOff);if(DATA.weekTasks[vw]?.[pid])delete DATA.weekTasks[vw][pid][idx];dSaveNow("weekTasks",DATA.weekTasks);renderTraining();}
-function copyPrevTask(pid){const vw=wkS(trainOff);const pv=wkS(trainOff-1);const prev=DATA.weekTasks[pv]?.[pid];if(!prev){showToast("Không có dữ liệu tuần trước!","#ef4444");return;}if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};const fresh={};Object.values(prev).forEach((t,i)=>fresh[i]={...t,played:""});DATA.weekTasks[vw][pid]=fresh;dSaveNow("weekTasks",DATA.weekTasks);renderTraining();}
+function saveTaskF(pid,idx,field,val){const vw=wkS(trainOff);opSet("weekTasks",[vw,pid,idx,field],val,350);if(field==="played")setTimeout(function(){if(!_isEditing())renderTraining();},600);}
+function addTask(pid){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};const existing=Object.keys(DATA.weekTasks[vw][pid]).length;if(existing>=15){showToast("Tối đa 15 tướng mỗi người!","#f97316");return;}const idx=Date.now()+"-"+Math.random().toString(36).slice(2,6);opSet("weekTasks",[vw,pid,idx],{hero:"",required:"",played:""},250);renderTraining();}
+function removeTask(pid,idx){const vw=wkS(trainOff);opDel("weekTasks",[vw,pid,idx],250);renderTraining();}
+function copyPrevTask(pid){const vw=wkS(trainOff);const pv=wkS(trainOff-1);const prev=DATA.weekTasks[pv]?.[pid];if(!prev){showToast("Không có dữ liệu tuần trước!","#ef4444");return;}const fresh={};Object.values(prev).forEach((t,i)=>fresh[i]={...t,played:""});opSet("weekTasks",[vw,pid],fresh,250);renderTraining();}
 function trainNav(dir){trainOff+=dir;renderTraining();}
 function openHeroEdit(hsId,pid,idx,cur){openModal("hero-modal");document.getElementById("hm-meta").value=JSON.stringify({pid,idx});document.getElementById("hm-inp").value=cur;}
 function saveHeroRename(){const meta=JSON.parse(document.getElementById("hm-meta").value||"{}");const val=document.getElementById("hm-inp").value.trim();if(!val){closeModal("hero-modal");return;}if(meta.type==="list"){if(!CFG.heroes)CFG.heroes=[...DEF_HEROES];CFG.heroes[meta.i]=val;dSave("config",CFG,500);closeModal("hero-modal");renderSettings();}else if(meta.pid!=null&&meta.idx!=null){saveTaskF(meta.pid,meta.idx,"hero",val);closeModal("hero-modal");}}
