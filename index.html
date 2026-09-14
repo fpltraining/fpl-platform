@@ -187,6 +187,28 @@ th{color:var(--muted);font-size:10px;font-weight:700}
 .hero-por .hp-tick{position:absolute;right:-1px;bottom:-1px;width:15px;height:15px;border-radius:50%;background:#22c55e;color:#04210f;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid var(--mid)}
 .hero-por.hp-sm{width:30px;height:30px;border-width:1.5px}
 .hero-por.hp-lg{width:54px;height:54px}
+/* ── COMBO TƯỚNG (ghép 2+ vị trí) ── */
+.combo-slot{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;width:74px}
+.combo-slot-empty{width:56px;height:56px;border-radius:50%;border:2px dashed var(--bdr);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--muted);transition:border-color .18s,color .18s}
+.combo-slot:hover .combo-slot-empty{border-color:var(--gold);color:var(--gold)}
+.combo-slot-lbl{font-size:9.5px;color:var(--muted);text-align:center;line-height:1.3;max-width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.combo-slot-x{font-size:9px;color:var(--red);cursor:pointer;margin-top:-2px}
+.combo-picker-opt{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12.5px}
+.combo-picker-opt:hover{background:var(--gold-soft);color:var(--gold)}
+.combo-pick-lane{margin-bottom:12px}
+.combo-pick-lane:last-child{margin-bottom:2px}
+.combo-pick-lane-lbl{font-size:9.5px;font-weight:900;letter-spacing:1.4px;color:var(--gold);margin:2px 0 7px 2px;text-transform:uppercase}
+.combo-pick-lane-row{display:flex;gap:8px;flex-wrap:wrap}
+.combo-pick-item{display:flex;flex-direction:column;align-items:center;gap:3px;width:64px;cursor:pointer;padding:6px 3px;border-radius:10px;transition:background .15s}
+.combo-pick-item:hover{background:var(--gold-soft)}
+.combo-pick-item-hero{font-size:10px;font-weight:700;text-align:center;line-height:1.2;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.combo-pick-item-p{font-size:8.5px;color:var(--muted);text-align:center;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.combo-card{background:var(--mid);border:1px solid var(--bdr);border-radius:13px;padding:13px 14px;margin-bottom:10px}
+.combo-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.combo-plus{font-size:15px;font-weight:900;color:var(--muted)}
+.combo-member{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:70px}
+.combo-member-nm{font-size:10.5px;font-weight:800;text-align:center;line-height:1.25}
+.combo-member-sub{font-size:9px;color:var(--muted);text-align:center}
 /* ── DÒNG NHIỆM VỤ LUYỆN TƯỚNG ── */
 .tk-row{background:var(--mid);border:1px solid var(--bdr);border-radius:11px;padding:11px 13px;margin-bottom:9px;transition:border-color .2s,background .2s}
 .tk-row.tk-done{background:linear-gradient(180deg,rgba(34,197,94,.07),transparent),var(--mid);border-color:rgba(34,197,94,.4)}
@@ -552,6 +574,7 @@ th{color:var(--muted);font-size:10px;font-weight:700}
       </div>
     </div>
     <div id="rewards-box"></div>
+    <div id="combo-box"></div>
     <div class="card">
       <div class="ct">🏁 ĐUA SỐ GAME — CẢ ĐỘI</div>
       <div class="rc-tabs">
@@ -706,6 +729,17 @@ th{color:var(--muted);font-size:10px;font-weight:700}
   </div>
 </div>
 
+<div id="combo-modal" class="modal">
+  <div class="modal-box" style="max-width:460px">
+    <div class="ct">🔗 GHÉP COMBO TƯỚNG</div>
+    <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px">Bấm vào từng vị trí bên dưới để chọn tuyển thủ + tướng đang luyện tuần này.</div>
+    <div id="combo-slots" class="flex" style="justify-content:center;gap:16px;margin-bottom:10px"></div>
+    <div style="text-align:center;margin-bottom:12px"><button class="btn btn-gray btn-sm" onclick="addComboSlot()">+ Thêm vị trí</button></div>
+    <div id="combo-picker" style="display:none;max-height:220px;overflow-y:auto;background:var(--input-bg);border:1px solid var(--bdr);border-radius:10px;padding:5px;margin-bottom:14px"></div>
+    <div class="flex"><button class="btn btn-gf" style="flex:1" onclick="saveCombo()">🔗 Lưu combo</button><button class="btn btn-gray" onclick="closeModal('combo-modal')">Hủy</button></div>
+  </div>
+</div>
+
 <div id="reward-modal" class="modal">
   <div class="modal-box">
     <div class="ct" style="color:var(--red)">🔥 TRAO THẺ THƯỞNG ĐỎ</div>
@@ -798,7 +832,7 @@ function defCFG(){return{eventName:"APL 2026",eventDate:"2026-06-15",checkinTime
 // ══════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════
-var CFG=defCFG(),DATA={attendance:{},scrims:[],weekTasks:{},performance:{},announcements:[],dailyNotes:[],coachPrivate:"",events:[],absences:[],oppNotes:{},journals:{},trainLevels:{},achievements:[],rewards:[],heroImgs:{}};
+var CFG=defCFG(),DATA={attendance:{},scrims:[],weekTasks:{},performance:{},announcements:[],dailyNotes:[],coachPrivate:"",events:[],absences:[],oppNotes:{},journals:{},trainLevels:{},achievements:[],rewards:[],heroImgs:{},combos:{}};
 var CU=null,CID=null;
 var heroImgVer=0;   // phiên bản kho ảnh tướng — dùng để biết khi nào cần tải lại ảnh
 var attOff=0,trainOff=0,perfOff=0;
@@ -1063,12 +1097,12 @@ window.onload=async function(){
       dbGet("config"),dbGet("attendance"),dbGet("scrims"),dbGet("weekTasks"),
       dbGet("performance"),dbGet("announcements"),dbGet("dailyNotes"),dbGet("coachPrivate"),
       dbGet("events"),dbGet("absences"),dbGet("oppNotes"),dbGet("journals"),
-      dbGet("trainLevels"),dbGet("achievements"),dbGet("rewards"),dbGet("heroImgs"),dbGet("heroImgsVer")
+      dbGet("trainLevels"),dbGet("achievements"),dbGet("rewards"),dbGet("heroImgs"),dbGet("heroImgsVer"),dbGet("combos")
     ]);
     var cfg=results[0],att=results[1],sc=results[2],wt=results[3];
     var perf=results[4],anns=results[5],dn=results[6],cp=results[7];
     var ev=results[8],abs=results[9],oppN=results[10],jour=results[11];
-    var tl=results[12],ach=results[13],rw=results[14],hi=results[15],hiv=results[16];
+    var tl=results[12],ach=results[13],rw=results[14],hi=results[15],hiv=results[16],cb=results[17];
     if(cfg)CFG=Object.assign(defCFG(),cfg);
     // Merge defaults for new player slots (p7/p8) so passwords/info exist even
     // if the saved config predates them. Existing edits are preserved.
@@ -1092,6 +1126,7 @@ window.onload=async function(){
     if(rw)DATA.rewards=Array.isArray(rw)?rw:[];
     if(hi)DATA.heroImgs=hi||{};
     if(hiv)heroImgVer=hiv;
+    if(cb)DATA.combos=cb||{};
   }catch(e){console.warn("Load error:",e);}
   document.getElementById("loading").style.display="none";
   buildLoginDropdown();
@@ -1118,7 +1153,7 @@ async function refreshData(){if(!CU)return;
   if(_isEditing())return;
   if(Date.now()-_lastEditAt<3000)return;
   try{
-  var rd=await Promise.all([dbGet("attendance"),dbGet("scrims"),dbGet("announcements"),dbGet("dailyNotes"),dbGet("events"),dbGet("absences"),dbGet("weekTasks"),dbGet("trainLevels"),dbGet("achievements"),dbGet("rewards"),dbGet("heroImgsVer")]);
+  var rd=await Promise.all([dbGet("attendance"),dbGet("scrims"),dbGet("announcements"),dbGet("dailyNotes"),dbGet("events"),dbGet("absences"),dbGet("weekTasks"),dbGet("trainLevels"),dbGet("achievements"),dbGet("rewards"),dbGet("heroImgsVer"),dbGet("combos")]);
   // Tải về mất vài trăm ms tới vài giây. Trong lúc đó người dùng đã có thể bắt đầu
   // gõ hoặc vừa sửa xong — nếu cứ áp dữ liệu cũ vừa tải xuống thì sẽ ĐÈ MẤT thứ họ
   // đang nhập. Phải kiểm tra LẠI ngay trước khi ghi đè.
@@ -1144,6 +1179,7 @@ async function refreshData(){if(!CU)return;
   if(rd[7]&&!isPending("trainLevels"))DATA.trainLevels=rd[7]||{};
   if(rd[8]&&!isPending("achievements"))DATA.achievements=Array.isArray(rd[8])?rd[8]:[];
   if(rd[9]&&!isPending("rewards"))DATA.rewards=Array.isArray(rd[9])?rd[9]:[];
+  if(rd[11]&&!isPending("combos"))DATA.combos=rd[11]||{};
   var pd=document.getElementById("page-dashboard");
   var pa=document.getElementById("page-attendance");
   var pt=document.getElementById("page-training");
@@ -1424,7 +1460,7 @@ function awardGreen(mk){
   });
   if(!added){showToast("Đã trao thẻ cho tháng này rồi!","#f97316");return;}
   attConfetti();
-  showToast("🎁 Đã trao "+added+" thẻ xanh!");renderTraining();
+  showToast("🎁 Đã trao "+added+" thẻ xanh!");safeRenderTraining();
 }
 function openRedAward(){
   var opts=actPIDS().map(function(pid){var p=pInfo(pid);return'<option value="'+pid+'">'+esc(p.avatar+" "+p.name)+'</option>';}).join("");
@@ -1439,7 +1475,7 @@ function saveRedAward(){
   if(!reason){showToast("Nhập lý do trao thẻ!","#ef4444");return;}
   opPut("rewards",{id:Date.now()+"-"+pid,pid:pid,type:"red",month:monKey(0),reason:reason,awarded:Date.now(),claimed:false},250);
   closeModal("reward-modal");attConfetti();
-  showToast("🔥 Đã trao thẻ đỏ!");renderTraining();
+  showToast("🔥 Đã trao thẻ đỏ!");safeRenderTraining();
 }
 function claimReward(id,btnEl){
   var r=DATA.rewards.filter(function(x){return String(x.id)===String(id);})[0];
@@ -1449,7 +1485,7 @@ function claimReward(id,btnEl){
   var card=btnEl?btnEl.closest(".rw-card"):document.querySelector('.rw-card[data-rwid="'+id+'"]');
   flyCardToBag(card,function(){
     attConfetti();showToast("🎉 Đã bỏ thẻ vào Túi thưởng!");
-    renderAccount();renderTraining();updateBagBadge();
+    renderAccount();safeRenderTraining();updateBagBadge();
   });
 }
 // Thẻ bay theo vòng cung rồi rớt vào tab Tài Khoản (nơi chứa Túi thưởng).
@@ -1512,7 +1548,7 @@ function updateBagBadge(){
 }
 function delReward(id){
   if(!confirm("Thu hồi thẻ thưởng này?"))return;
-  opCut("rewards",id,250);renderTraining();renderAccount();
+  opCut("rewards",id,250);safeRenderTraining();renderAccount();
 }
 // Thẻ thưởng dùng chung cho Túi thưởng + bảng coach.
 function rewardCardHTML(r,showClaim){
@@ -1833,6 +1869,7 @@ function renderTraining(){
   const showP=isCoach?actPIDS():actPIDS().filter(pid=>pid===CID);
   const rwBox=document.getElementById("rewards-box");
   if(rwBox)rwBox.innerHTML=renderRewardsHTML();
+  renderComboBox(vw,tasks,isCoach);
   document.getElementById("training-list").innerHTML=showP.map(pid=>{
     const p=pInfo(pid);const ptasks=tasks[pid]||{};
     const list=Object.entries(ptasks);
@@ -1925,11 +1962,140 @@ function hlMatch(h,q){
 }
 function sHS(id,hero){const inp=document.getElementById("inp-"+id);const dd=document.getElementById("dd-"+id);if(inp)inp.value=hero;if(dd){dd.classList.remove("open");const pid=dd.dataset.pid;const idx=dd.dataset.idx;if(pid&&idx!=null){const vw=wkS(trainOff);opSet("weekTasks",[vw,pid,idx,"hero"],hero,250);}}}
 function cHS(id){document.getElementById("dd-"+id)?.classList.remove("open");}
+// Đóng NGAY danh sách gợi ý tướng khi bấm ra ngoài, không chờ hết 350ms của onblur.
+// Trước đây dropdown đè lên đúng vị trí ô "yêu cầu"/"đã chơi"/nút xóa của dòng đó
+// (position:absolute, z-index cao) — bấm vào các ô/nút đó trong lúc dropdown còn mở
+// (chưa hết 350ms) sẽ bị dropdown "nuốt" mất cú bấm. Đóng ở pha mousedown (trước khi
+// trình duyệt tính click) để cú bấm đó vẫn rơi trúng đúng phần tử bên dưới.
+document.addEventListener("mousedown",function(e){
+  var dds=document.querySelectorAll(".hs-dd.open");
+  for(var i=0;i<dds.length;i++){
+    var dd=dds[i],wrap=dd.parentNode;
+    if(wrap&&wrap.contains(e.target))continue;
+    dd.classList.remove("open");
+  }
+},true);
 function saveTaskF(pid,idx,field,val){const vw=wkS(trainOff);opSet("weekTasks",[vw,pid,idx,field],val,350);if(field==="played")setTimeout(function(){if(!_isEditing())renderTraining();},600);}
-function addTask(pid){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};const existing=Object.keys(DATA.weekTasks[vw][pid]).length;if(existing>=15){showToast("Tối đa 15 tướng mỗi người!","#f97316");return;}const idx=Date.now()+"-"+Math.random().toString(36).slice(2,6);opSet("weekTasks",[vw,pid,idx],{hero:"",required:"",played:""},250);renderTraining();}
-function removeTask(pid,idx){const vw=wkS(trainOff);opDel("weekTasks",[vw,pid,idx],250);renderTraining();}
-function copyPrevTask(pid){const vw=wkS(trainOff);const pv=wkS(trainOff-1);const prev=DATA.weekTasks[pv]?.[pid];if(!prev){showToast("Không có dữ liệu tuần trước!","#ef4444");return;}const fresh={};Object.values(prev).forEach((t,i)=>fresh[i]={...t,played:""});opSet("weekTasks",[vw,pid],fresh,250);renderTraining();}
+// Vẽ lại danh sách luyện tướng nhưng KHÔNG xóa mất ô số đang gõ dở của người khác.
+// Trước đây addTask/removeTask/copyPrevTask/trao thẻ gọi renderTraining() ngay lập tức,
+// nếu lúc đó có ô "đã chơi"/"yêu cầu" của 1 tuyển thủ khác đang được gõ (chưa rời ô nên
+// chưa lưu vào DATA) thì bị vẽ lại đè mất số vừa gõ. Giờ hoãn lại tới khi rời ô xong.
+function safeRenderTraining(){
+  if(_isEditing()){setTimeout(function(){if(!_isEditing())renderTraining();},600);return;}
+  renderTraining();
+}
+function addTask(pid){const vw=wkS(trainOff);if(!DATA.weekTasks[vw])DATA.weekTasks[vw]={};if(!DATA.weekTasks[vw][pid])DATA.weekTasks[vw][pid]={};const existing=Object.keys(DATA.weekTasks[vw][pid]).length;if(existing>=15){showToast("Tối đa 15 tướng mỗi người!","#f97316");return;}const idx=Date.now()+"-"+Math.random().toString(36).slice(2,6);opSet("weekTasks",[vw,pid,idx],{hero:"",required:"",played:""},250);safeRenderTraining();}
+function removeTask(pid,idx){const vw=wkS(trainOff);opDel("weekTasks",[vw,pid,idx],250);safeRenderTraining();}
+function copyPrevTask(pid){const vw=wkS(trainOff);const pv=wkS(trainOff-1);const prev=DATA.weekTasks[pv]?.[pid];if(!prev){showToast("Không có dữ liệu tuần trước!","#ef4444");return;}const fresh={};Object.values(prev).forEach((t,i)=>fresh[i]={...t,played:""});opSet("weekTasks",[vw,pid],fresh,250);safeRenderTraining();}
 function trainNav(dir){trainOff+=dir;renderTraining();}
+
+// ══════════════════════════════════════════════════
+// COMBO TƯỚNG — ghép 2+ vị trí (VD Mid + Sup) để Coach nhìn 1 lượt
+// tiến độ luyện cả cặp, mà mỗi người vẫn tự nhập số như bình thường.
+// Lưu theo tuần, giống cấu trúc weekTasks: DATA.combos[tuần][comboId]={members:[{pid,idx},...]}
+// ══════════════════════════════════════════════════
+var comboVw="",comboDraft=[],comboEditId=null,comboActiveSlot=-1;
+function renderComboBox(vw,tasks,isCoach){
+  var box=document.getElementById("combo-box");if(!box)return;
+  var combos=(DATA.combos&&DATA.combos[vw])||{};
+  var ids=Object.keys(combos);
+  var addBtn=isCoach?'<button class="btn btn-purple btn-sm" onclick="openComboModal()">+ Ghép combo</button>':"";
+  if(!ids.length){
+    box.innerHTML=isCoach?('<div class="card"><div class="flex" style="justify-content:space-between;flex-wrap:wrap;gap:8px"><div class="ct" style="margin:0">🔗 COMBO ĐANG LUYỆN</div>'+addBtn+'</div><div class="empty" style="padding:14px 0;font-size:12px">Chưa ghép combo nào tuần này.</div></div>'):"";
+    return;
+  }
+  var cards=ids.map(function(id){
+    var c=combos[id]||{};
+    var members=(c.members||[]).map(function(m){
+      var p=pInfo(m.pid);
+      var t=(tasks[m.pid]&&tasks[m.pid][m.idx])||{};
+      var pl=parseInt(t.played||0)||0,rq=parseInt(t.required||0)||0;
+      var isDone=!!(t.hero&&pl>=(rq||1));
+      return '<div class="combo-member">'+heroPorHTML(t.hero,isDone,"hp-sm")+'<div class="combo-member-nm">'+p.avatar+' '+esc(p.name)+'</div><div class="combo-member-sub">'+esc(t.hero||"—")+' · '+pl+'/'+(rq||"?")+'</div></div>';
+    }).join('<div class="combo-plus">+</div>');
+    var del=isCoach?('<div style="text-align:center;margin-top:10px"><button class="btn btn-red btn-sm" onclick="removeCombo(\''+jsq(vw)+'\',\''+jsq(id)+'\')">✕ Bỏ combo</button></div>'):"";
+    return '<div class="combo-card"><div class="combo-row">'+members+'</div>'+del+'</div>';
+  }).join("");
+  box.innerHTML='<div class="card"><div class="flex" style="justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div class="ct" style="margin:0">🔗 COMBO ĐANG LUYỆN</div>'+addBtn+'</div>'+cards+'</div>';
+}
+function openComboModal(){
+  comboVw=wkS(trainOff);
+  comboDraft=[null,null];
+  comboEditId=null;
+  comboActiveSlot=-1;
+  var pk=document.getElementById("combo-picker");if(pk){pk.style.display="none";pk.innerHTML="";}
+  renderComboSlots();
+  openModal("combo-modal");
+}
+function renderComboSlots(){
+  var box=document.getElementById("combo-slots");if(!box)return;
+  box.innerHTML=comboDraft.map(function(m,i){
+    if(!m)return '<div class="combo-slot" onclick="pickComboSlot('+i+')"><div class="combo-slot-empty">+</div><div class="combo-slot-lbl">Chọn vị trí</div></div>';
+    var p=pInfo(m.pid);
+    var tasks=DATA.weekTasks[comboVw]||{};
+    var t=(tasks[m.pid]&&tasks[m.pid][m.idx])||{};
+    return '<div class="combo-slot" onclick="pickComboSlot('+i+')">'+heroPorHTML(t.hero,false,"hp-lg")+'<div class="combo-slot-lbl">'+p.avatar+' '+esc(p.name)+'<br>'+esc(t.hero||"?")+'</div><div class="combo-slot-x" onclick="event.stopPropagation();clearComboSlot('+i+')">✕ bỏ chọn</div></div>';
+  }).join("");
+}
+function addComboSlot(){
+  if(comboDraft.length>=5){showToast("Tối đa 5 vị trí trong 1 combo!","#f97316");return;}
+  comboDraft.push(null);
+  renderComboSlots();
+}
+function clearComboSlot(i,ev){
+  if(ev)ev.stopPropagation();
+  comboDraft[i]=null;
+  renderComboSlots();
+}
+// Danh sách chọn nhóm THEO TỪNG LANE (vị trí thi đấu), mỗi lựa chọn hiện mặt
+// tướng tròn (không phải chữ) cho dễ tìm — theo đúng ý Coach.
+function pickComboSlot(i){
+  comboActiveSlot=i;
+  var pk=document.getElementById("combo-picker");if(!pk)return;
+  var tasks=DATA.weekTasks[comboVw]||{};
+  var used={};
+  comboDraft.forEach(function(m,mi){if(m&&mi!==i)used[m.pid+"|"+m.idx]=true;});
+  var lanes={},laneOrder=[];
+  actPIDS().forEach(function(pid){
+    var p=pInfo(pid);
+    var pt=tasks[pid]||{};
+    var items=Object.keys(pt).filter(function(idx){
+      var t=pt[idx];
+      return t&&t.hero&&!used[pid+"|"+idx];
+    });
+    if(!items.length)return;
+    if(!lanes[p.pos]){lanes[p.pos]=[];laneOrder.push(p.pos);}
+    items.forEach(function(idx){lanes[p.pos].push({pid:pid,idx:idx,hero:pt[idx].hero,p:p});});
+  });
+  pk.innerHTML=laneOrder.length?laneOrder.map(function(lane){
+    var row=lanes[lane].map(function(o){
+      return '<div class="combo-pick-item" onclick="chooseComboOption(\''+jsq(o.pid)+'\',\''+jsq(o.idx)+'\')">'+heroPorHTML(o.hero,false,"hp-sm")+'<div class="combo-pick-item-hero">'+esc(o.hero)+'</div><div class="combo-pick-item-p">'+o.p.avatar+' '+esc(o.p.name)+'</div></div>';
+    }).join("");
+    return '<div class="combo-pick-lane"><div class="combo-pick-lane-lbl">'+esc(lane)+'</div><div class="combo-pick-lane-row">'+row+'</div></div>';
+  }).join(""):'<div style="text-align:center;padding:16px 10px"><div style="font-size:26px;margin-bottom:6px">🗡️</div><div style="font-size:12px;color:var(--txt);font-weight:700;margin-bottom:3px">Tuần này chưa ai có tướng để ghép combo</div><div style="font-size:11px;color:var(--muted)">Coach cần gõ tên tướng vào ô "Tìm tướng..." trong danh sách luyện tướng của từng tuyển thủ trước, rồi mới ghép combo được.</div></div>';
+  pk.style.display="block";
+}
+function chooseComboOption(pid,idx){
+  if(comboActiveSlot<0)return;
+  comboDraft[comboActiveSlot]={pid:pid,idx:idx};
+  comboActiveSlot=-1;
+  var pk=document.getElementById("combo-picker");if(pk)pk.style.display="none";
+  renderComboSlots();
+}
+function saveCombo(){
+  var members=comboDraft.filter(function(m){return m;});
+  if(members.length<2){showToast("Cần chọn ít nhất 2 vị trí cho 1 combo!","#ef4444");return;}
+  var id=comboEditId||(Date.now()+"-"+Math.random().toString(36).slice(2,6));
+  opSet("combos",[comboVw,id],{members:members},250);
+  closeModal("combo-modal");
+  showToast("🔗 Đã lưu combo!");
+  safeRenderTraining();
+}
+function removeCombo(vw,id){
+  if(!confirm("Bỏ ghép combo này? (không xóa dữ liệu luyện tướng của từng người)"))return;
+  opDel("combos",[vw,id],250);
+  safeRenderTraining();
+}
 function openHeroEdit(hsId,pid,idx,cur){openModal("hero-modal");document.getElementById("hm-meta").value=JSON.stringify({pid,idx});document.getElementById("hm-inp").value=cur;}
 function saveHeroRename(){const meta=JSON.parse(document.getElementById("hm-meta").value||"{}");const val=document.getElementById("hm-inp").value.trim();if(!val){closeModal("hero-modal");return;}if(meta.type==="list"){if(!CFG.heroes)CFG.heroes=[...DEF_HEROES];CFG.heroes[meta.i]=val;dSave("config",CFG,500);closeModal("hero-modal");renderSettings();}else if(meta.pid!=null&&meta.idx!=null){saveTaskF(meta.pid,meta.idx,"hero",val);closeModal("hero-modal");}}
 
